@@ -1,6 +1,6 @@
 import { Response } from 'express'
 
-export default function (body: any, res: Response) {
+export default function (res: Response, body?: any) {
     res.json({
         success: true,
         body,

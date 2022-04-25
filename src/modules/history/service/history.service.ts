@@ -16,12 +16,14 @@ export class HistoryService {
         collection_name: string,
         who: string,
         type_change: keyof typeof TypeChangeKey,
+        why?: string,
     ) {
         const newChange = new this.historyModel({
             change,
             collection_name,
             who,
             type_change,
+            why,
         })
         return await newChange.save()
     }

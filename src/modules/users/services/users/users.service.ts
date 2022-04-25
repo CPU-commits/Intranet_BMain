@@ -17,7 +17,7 @@ export class UsersService {
     }
 
     async getUsers(
-        filter = null,
+        filter?: any,
         select = null,
         sort?,
         search?: string,
@@ -25,12 +25,30 @@ export class UsersService {
         skip?: number,
         total?: boolean,
     ) {
+        if (!filter) filter = {}
         if (search) {
-            filter = {
-                name: {
-                    $regex: new RegExp(search, 'i'),
+            filter.$or = [
+                {
+                    name: {
+                        $regex: new RegExp(search, 'i'),
+                    },
                 },
-            }
+                {
+                    first_lastname: {
+                        $regex: new RegExp(search, 'i'),
+                    },
+                },
+                {
+                    second_lastname: {
+                        $regex: new RegExp(search, 'i'),
+                    },
+                },
+                {
+                    rut: {
+                        $regex: new RegExp(search, 'i'),
+                    },
+                },
+            ]
         }
         const users = this.userModel.find(filter, select)
         if (limit) users.limit(limit)

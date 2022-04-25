@@ -19,20 +19,20 @@ import { RolesGuard } from 'src/auth/guards/roles.guard'
 import { Role } from 'src/auth/models/roles.model'
 import { PayloadToken } from 'src/auth/models/token.model'
 import { MongoIdPipe } from 'src/common/mongo-id.pipe'
+import { WhyDTO } from 'src/modules/directive/dtos/Directive.dto'
 import { UpdateUserDTO, UserDTO } from 'src/modules/users/dtos/user.dto'
 import handleError from 'src/res/handleError'
 import handleRes from 'src/res/handleRes'
-import { WhyDTO } from '../dtos/Directive.dto'
-import { DirectiveService } from '../services/directive.service'
+import { TeachersService } from '../service/teachers.service'
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('api/directive')
-export class DirectiveController {
-    constructor(private directiveService: DirectiveService) {}
+@Controller('api/teachers')
+export class TeachersController {
+    constructor(private teachersService: TeachersService) {}
 
     @Roles(Role.DIRECTOR)
-    @Get('/get_directives')
-    async getDirectives(
+    @Get('/get_teachers')
+    async getTeachers(
         @Res() res: Response,
         @Query('skip', ParseIntPipe) skip?: number,
         @Query('limit', ParseIntPipe) limit?: number,
@@ -40,7 +40,7 @@ export class DirectiveController {
         @Query('total', ParseBoolPipe) getTotal?: boolean,
     ) {
         try {
-            const directives = await this.directiveService.getDirectives(
+            const directives = await this.teachersService.getTeachers(
                 search,
                 skip,
                 limit,
@@ -53,20 +53,20 @@ export class DirectiveController {
     }
 
     @Roles(Role.DIRECTOR)
-    @Post('/new_directive')
-    async newDirective(
+    @Post('/new_teacher')
+    async newTeacher(
         @Res() res: Response,
         @Req() req: Request,
-        @Body() directive: UserDTO,
+        @Body() teacher: UserDTO,
     ) {
         try {
             const user: PayloadToken = req.user
-            const directiveData = await this.directiveService.createDirective(
-                directive,
+            const teacherData = await this.teachersService.createTeacher(
+                teacher,
                 user._id,
             )
             handleRes(res, {
-                directive: directiveData,
+                teacher: teacherData,
             })
         } catch (err) {
             handleError(err, res)
@@ -74,15 +74,15 @@ export class DirectiveController {
     }
 
     @Roles(Role.DIRECTOR)
-    @Post('/new_directives')
-    async newDirectives(
+    @Post('/new_teachers')
+    async newTeachers(
         @Res() res: Response,
         @Req() req: Request,
         @Body() directives: UserDTO[],
     ) {
         try {
             const user: PayloadToken = req.user
-            await this.directiveService.createDirectives(directives, user._id)
+            await this.teachersService.createTeachers(directives, user._id)
             handleRes(res)
         } catch (err) {
             handleError(err, res)
@@ -99,7 +99,7 @@ export class DirectiveController {
     ) {
         try {
             const user: PayloadToken = req.user
-            await this.directiveService.dismissDirective(
+            await this.teachersService.dismissTeacher(
                 idDirective,
                 why.why,
                 user._id,
@@ -111,8 +111,8 @@ export class DirectiveController {
     }
 
     @Roles(Role.DIRECTOR)
-    @Put('/edit_directive/:id')
-    async editDirective(
+    @Put('/edit_teacher/:id')
+    async editTeacher(
         @Res() res: Response,
         @Req() req: Request,
         @Body() directive: UpdateUserDTO,
@@ -120,7 +120,7 @@ export class DirectiveController {
     ) {
         try {
             const user: PayloadToken = req.user
-            await this.directiveService.updateDirective(
+            await this.teachersService.updateTeacher(
                 directive,
                 idDirective,
                 user._id,

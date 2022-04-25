@@ -10,7 +10,16 @@ export class History {
     @Prop({ required: true })
     change: string
 
-    @Prop({ required: true, enum: [Collections.USER] })
+    @Prop({
+        required: true,
+        enum: [
+            Collections.COURSE,
+            Collections.CYCLE,
+            Collections.USER,
+            Collections.SUBJECT,
+            Collections.SPECIALTY,
+        ],
+    })
     collection_name: string
 
     @Prop({ required: true, type: Types.ObjectId, ref: User.name })
@@ -26,6 +35,9 @@ export class History {
         ],
     })
     type_change: string
+
+    @Prop({ type: String, required: false, maxlength: 535 })
+    why: string
 }
 
 export const HistorySchema = SchemaFactory.createForClass(History)

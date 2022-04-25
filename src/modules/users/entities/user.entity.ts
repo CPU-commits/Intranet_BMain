@@ -31,7 +31,7 @@ export class User {
     })
     user_type: string
 
-    @Prop({ default: 0 })
+    @Prop({ default: 1 })
     status: number
 
     @Prop({ unique: true })
