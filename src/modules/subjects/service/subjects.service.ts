@@ -112,33 +112,21 @@ export class SubjectsService {
     // Anchors
     async addSubject(anchor: AnchorDTO, userId: string) {
         const exists = await Promise.all([
-            this.courseService.getSectionCustom({
-                _id: anchor.section,
+            this.courseService.getCourseCustom({
+                _id: anchor.course,
             }),
             this.getSubjectCustom({
                 _id: anchor.subject,
             }),
         ]).then(async (data) => {
-            if (data[0]) {
-                const course = await this.courseService.getCourseCustom({
-                    sections: {
-                        $in: [anchor.section],
-                    },
-                })
-                return {
-                    section: data[0],
-                    subject: data[1],
-                    course,
-                }
-            }
             return {
-                section: data[0],
                 subject: data[1],
+                course: data[0],
             }
         })
-        if (!exists.subject || !exists.section)
+        if (!exists.subject || !exists.course)
             throw new ConflictException('No existe el curso o la materia')
-        const updatedSection = await exists.section
+        await exists.course
             .updateOne(
                 {
                     $push: {
@@ -149,11 +137,11 @@ export class SubjectsService {
             )
             .exec()
         this.historyService.insertChange(
-            `Se ha añadido la materia ${exists.subject.subject} al curso ${exists.course.course} ${exists.section.section}`,
+            `Se ha añadido la materia ${exists.subject.subject} al curso ${exists.course.course}`,
             Collections.COURSE,
             userId,
             'add',
         )
-        return updatedSection
+        return exists.subject
     }
 }

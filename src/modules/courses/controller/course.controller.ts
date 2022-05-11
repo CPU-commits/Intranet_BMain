@@ -104,11 +104,24 @@ export class CourseController {
     // Sections
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Get('/get_course_sections')
-    async getSections(@Res() res: Response) {
+    async getCourseSections(@Res() res: Response) {
         try {
             const sections = await this.courseService.getCoursesSections()
             handleRes(res, {
                 ...sections,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_sections')
+    async getSections(@Res() res: Response) {
+        try {
+            const sections = await this.courseService.getSections()
+            handleRes(res, {
+                sections,
             })
         } catch (err) {
             handleError(err, res)
@@ -133,6 +146,27 @@ export class CourseController {
             handleRes(res, {
                 section: sectionData,
             })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Post('/add_teacher_section/:id/:idC')
+    async addTeacherSection(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('id', MongoIdPipe) idTeacher: string,
+        @Param('idC', MongoIdPipe) idSection: string,
+    ) {
+        try {
+            const user: PayloadToken = req.user
+            await this.courseService.addTeacherSection(
+                idSection,
+                idTeacher,
+                user._id,
+            )
+            handleRes(res)
         } catch (err) {
             handleError(err, res)
         }

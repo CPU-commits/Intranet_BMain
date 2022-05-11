@@ -18,6 +18,7 @@ export class History {
             Collections.USER,
             Collections.SUBJECT,
             Collections.SPECIALTY,
+            Collections.SEMESTER,
         ],
     })
     collection_name: string

@@ -3,13 +3,13 @@ import { Role } from 'src/auth/models/roles.model'
 
 @Schema()
 export class User {
-    @Prop({ required: true })
+    @Prop({ required: true, maxlength: 100 })
     name: string
 
-    @Prop({ required: true })
+    @Prop({ required: true, maxlength: 100 })
     first_lastname: string
 
-    @Prop({ required: true })
+    @Prop({ required: true, maxlength: 100 })
     second_lastname: string
 
     @Prop({ required: true })
@@ -31,11 +31,18 @@ export class User {
     })
     user_type: string
 
-    @Prop({ default: 1 })
+    @Prop({ default: 1, isInteger: true, min: 0 })
     status: number
 
-    @Prop({ unique: true })
+    @Prop()
     email?: string
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)
+UserSchema.index(
+    { email: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { email: { $type: 'string' } },
+    },
+)

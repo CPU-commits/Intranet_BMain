@@ -1,5 +1,7 @@
 import {
     ConflictException,
+    forwardRef,
+    Inject,
     Injectable,
     NotFoundException,
 } from '@nestjs/common'
@@ -7,6 +9,8 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { Collections } from 'src/modules/history/models/collections.model'
 import { HistoryService } from 'src/modules/history/service/history.service'
+import { TeachersService } from 'src/modules/teachers/service/teachers.service'
+import { User } from 'src/modules/users/entities/user.entity'
 import { CourseDTO, UpdateCourseDTO } from '../dtos/course.dto'
 import { Course } from '../entities/course.entity'
 import { CourseLetter } from '../entities/course_letter.entity'
@@ -21,6 +25,8 @@ export class CourseService {
         @InjectModel(CourseLetter.name)
         private sectionModel: Model<CourseLetter>,
         private historyService: HistoryService,
+        @Inject(forwardRef(() => TeachersService))
+        private teacherService: TeachersService,
     ) {}
 
     async getCourseCustom(query = null, filter = null) {
@@ -36,7 +42,8 @@ export class CourseService {
             .find(query, filter)
             .sort({ level: 1 })
             .populate('cycle', { cycle: 1 })
-            .populate('sections', { section: 1 })
+            .populate('subjects', { subject: 1 })
+            .populate('sections', { section: 1, header_teacher: 1 })
         if (count) courses.count()
         return await courses.exec()
     }
@@ -45,10 +52,21 @@ export class CourseService {
         return await this.sectionModel.findOne(query, filter).exec()
     }
 
+    async getSubjectSection(subjectId: string, sectionId: string) {
+        const subject = await this.courseModel
+            .findOne({
+                subjects: { $in: [subjectId] },
+                sections: { $in: [sectionId] },
+            })
+            .populate('subjects', { subject: 1 })
+            .populate('course', { course: 1 })
+            .exec()
+        return subject
+    }
+
     async getSections() {
         return await this.sectionModel
             .find()
-            .populate('subjects')
             .populate('course', { course: 1 })
             .exec()
     }
@@ -201,14 +219,49 @@ export class CourseService {
         return newSection
     }
 
+    async addTeacherSection(
+        idSection: string,
+        idTeacher: string,
+        idUser: string,
+    ) {
+        const teacherExists = await this.teacherService.getTeacherByID(
+            idTeacher,
+        )
+        if (!teacherExists) throw new NotFoundException('El profesor no existe')
+        const teacherAsig = await this.sectionModel.findOne({
+            header_teacher: idTeacher,
+        })
+        if (teacherAsig)
+            throw new ConflictException(
+                'El profesor está asignado a otro curso',
+            )
+        const teacher = teacherExists.user as User
+        const teacherAdded = await this.sectionModel
+            .findByIdAndUpdate(
+                idSection,
+                {
+                    $set: {
+                        header_teacher: idTeacher,
+                    },
+                },
+                { new: true },
+            )
+            .exec()
+        this.historyService.insertChange(
+            `Se ha asignado el profesor ${teacher.name} ${teacher.first_lastname}`,
+            Collections.COURSE,
+            idUser,
+            'update',
+        )
+        return teacherAdded
+    }
+
     async deleteSection(idSection: string, idUser: string) {
         const section = await this.getSectionById(idSection)
         if (!section) throw new NotFoundException('No existe la sección')
         const deletedSection = await this.sectionModel.findByIdAndDelete(
             idSection,
         )
-        if (section.subjects.length > 0)
-            throw new ConflictException('La sección está siendo ocupada')
         this.historyService.insertChange(
             `Se ha eliminado la sección ${section.section}`,
             Collections.COURSE,

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { CourseService } from './service/course.service'
 import { Cycle, CycleSchema } from './entities/cycle.entity'
@@ -9,6 +9,7 @@ import {
     CourseLetter,
     CourseLetterSchema,
 } from './entities/course_letter.entity'
+import { TeachersModule } from '../teachers/teachers.module'
 
 @Module({
     imports: [
@@ -27,6 +28,7 @@ import {
             },
         ]),
         HistoryModule,
+        forwardRef(() => TeachersModule),
     ],
     providers: [CourseService],
     controllers: [CourseController],

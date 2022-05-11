@@ -139,8 +139,13 @@ export class SubjectsController {
     ) {
         try {
             const user: PayloadToken = req.user
-            await this.subjectService.addSubject(anchor, user._id)
-            handleRes(res)
+            const subjectAdded = await this.subjectService.addSubject(
+                anchor,
+                user._id,
+            )
+            handleRes(res, {
+                subject: subjectAdded,
+            })
         } catch (err) {
             handleError(err, res)
         }

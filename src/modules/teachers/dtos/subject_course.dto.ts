@@ -1,6 +1,6 @@
 import { IsMongoId, IsNotEmpty } from 'class-validator'
 
-export class AnchorDTO {
+export class SubjectCourseDTO {
     @IsMongoId()
     @IsNotEmpty()
     course: string

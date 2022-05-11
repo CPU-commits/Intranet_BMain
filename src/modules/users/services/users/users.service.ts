@@ -83,7 +83,7 @@ export class UsersService {
         const response = await Promise.all(
             users.map(async (user) => {
                 const password = user.rut.slice(3, user.rut.length - 2)
-                return await {
+                return {
                     password: await this.generatePassword(password),
                     ...user,
                 }

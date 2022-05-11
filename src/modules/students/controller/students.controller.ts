@@ -20,54 +20,54 @@ import { Role } from 'src/auth/models/roles.model'
 import { PayloadToken } from 'src/auth/models/token.model'
 import { MongoIdPipe } from 'src/common/mongo-id.pipe'
 import { WhyDTO } from 'src/modules/directive/dtos/Directive.dto'
-import { UpdateUserDTO, UserDTO } from 'src/modules/users/dtos/user.dto'
+import { UserDTO } from 'src/modules/users/dtos/user.dto'
 import handleError from 'src/res/handleError'
 import handleRes from 'src/res/handleRes'
-import { SubjectCourseDTO } from '../dtos/subject_course.dto'
-import { TeachersService } from '../service/teachers.service'
+import { UpdateStudentDTO } from '../dtos/student.dto'
+import { StudentsService } from '../service/students.service'
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('api/teachers')
-export class TeachersController {
-    constructor(private teachersService: TeachersService) {}
+@Controller('api/students')
+export class StudentsController {
+    constructor(private studentsService: StudentsService) {}
 
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
-    @Get('/get_teachers')
-    async getTeachers(
+    @Get('/get_students')
+    async getStudents(
         @Res() res: Response,
         @Query('skip', ParseIntPipe) skip?: number,
-        @Query('limit') limit?: number,
+        @Query('limit', ParseIntPipe) limit?: number,
         @Query('search') search?: string,
         @Query('total', ParseBoolPipe) getTotal?: boolean,
     ) {
         try {
-            const directives = await this.teachersService.getTeachers(
+            const students = await this.studentsService.getStudents(
                 search,
                 skip,
                 limit,
                 getTotal,
             )
-            handleRes(res, directives)
+            handleRes(res, students)
         } catch (err) {
             handleError(err, res)
         }
     }
 
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
-    @Post('/new_teacher')
-    async newTeacher(
+    @Post('/new_student')
+    async newStudent(
         @Res() res: Response,
         @Req() req: Request,
-        @Body() teacher: UserDTO,
+        @Body() student: UserDTO,
     ) {
         try {
             const user: PayloadToken = req.user
-            const teacherData = await this.teachersService.createTeacher(
-                teacher,
+            const studentData = await this.studentsService.createStudent(
+                student,
                 user._id,
             )
             handleRes(res, {
-                teacher: teacherData,
+                student: studentData,
             })
         } catch (err) {
             handleError(err, res)
@@ -75,15 +75,15 @@ export class TeachersController {
     }
 
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
-    @Post('/new_teachers')
-    async newTeachers(
+    @Post('/new_students')
+    async newStudents(
         @Res() res: Response,
         @Req() req: Request,
-        @Body() directives: UserDTO[],
+        @Body() students: UserDTO[],
     ) {
         try {
             const user: PayloadToken = req.user
-            await this.teachersService.createTeachers(directives, user._id)
+            await this.studentsService.createStudents(students, user._id)
             handleRes(res)
         } catch (err) {
             handleError(err, res)
@@ -95,13 +95,13 @@ export class TeachersController {
     async changeStatus(
         @Res() res: Response,
         @Req() req: Request,
-        @Param('id', MongoIdPipe) idDirective: string,
+        @Param('id', MongoIdPipe) idStudent: string,
         @Body() why: WhyDTO,
     ) {
         try {
             const user: PayloadToken = req.user
-            await this.teachersService.dismissTeacher(
-                idDirective,
+            await this.studentsService.dismissStudent(
+                idStudent,
                 why.why,
                 user._id,
             )
@@ -112,42 +112,21 @@ export class TeachersController {
     }
 
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
-    @Put('/edit_teacher/:id')
-    async editTeacher(
+    @Put('/edit_student/:id')
+    async editStudent(
         @Res() res: Response,
         @Req() req: Request,
-        @Body() directive: UpdateUserDTO,
-        @Param('id', MongoIdPipe) idDirective: string,
+        @Body() student: UpdateStudentDTO,
+        @Param('id', MongoIdPipe) idStudent: string,
     ) {
         try {
             const user: PayloadToken = req.user
-            await this.teachersService.updateTeacher(
-                directive,
-                idDirective,
+            await this.studentsService.updateStudent(
+                student,
+                idStudent,
                 user._id,
             )
             handleRes(res)
-        } catch (err) {
-            handleError(err, res)
-        }
-    }
-
-    @Roles(Role.DIRECTOR, Role.DIRECTIVE)
-    @Post('/add_subject_course/:id')
-    async addSubjectCourse(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Body() subjectCourse: SubjectCourseDTO,
-        @Param('id', MongoIdPipe) idTeacher: string,
-    ) {
-        try {
-            const user: PayloadToken = req.user
-            const teacherData = await this.teachersService.addSubjectCourse(
-                subjectCourse,
-                idTeacher,
-                user._id,
-            )
-            handleRes(res, teacherData)
         } catch (err) {
             handleError(err, res)
         }

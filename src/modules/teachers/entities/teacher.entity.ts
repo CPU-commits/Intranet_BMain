@@ -5,10 +5,7 @@ import { Subject } from 'src/modules/subjects/entities/subject.entity'
 import { User } from 'src/modules/users/entities/user.entity'
 
 export class Imparted {
-    @Prop({ required: true, type: Types.ObjectId, ref: Subject.name })
     subject: Types.ObjectId | Subject
-
-    @Prop({ required: true, type: Types.ObjectId, ref: CourseLetter.name })
     course: Types.ObjectId | CourseLetter
 }
 
@@ -17,7 +14,22 @@ export class Teacher {
     @Prop({ required: true, type: Types.ObjectId, ref: User.name })
     user: Types.ObjectId | User
 
-    @Prop([{ type: Imparted }])
+    @Prop({
+        type: [
+            {
+                subject: {
+                    required: true,
+                    type: Types.ObjectId,
+                    ref: Subject.name,
+                },
+                course: {
+                    required: true,
+                    type: Types.ObjectId,
+                    ref: CourseLetter.name,
+                },
+            },
+        ],
+    })
     imparted: Imparted[]
 }
 
