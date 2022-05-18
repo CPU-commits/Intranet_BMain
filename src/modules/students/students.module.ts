@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { StudentsService } from './service/students.service'
 import { StudentsController } from './controller/students.controller'
 import { UsersModule } from '../users/users.module'
@@ -14,10 +14,11 @@ import { Student, StudentSchema } from './entities/student.entity'
                 schema: StudentSchema,
             },
         ]),
-        UsersModule,
+        forwardRef(() => UsersModule),
         HistoryModule,
     ],
     providers: [StudentsService],
     controllers: [StudentsController],
+    exports: [StudentsService],
 })
 export class StudentsModule {}

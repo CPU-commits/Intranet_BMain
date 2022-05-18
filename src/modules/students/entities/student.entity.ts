@@ -10,6 +10,9 @@ export class Student {
 
     @Prop({ type: Types.ObjectId, ref: CourseLetter.name })
     course: Types.ObjectId | CourseLetter
+
+    @Prop({ required: true })
+    registration_number: string
 }
 
 export const StudentSchema = SchemaFactory.createForClass(Student)

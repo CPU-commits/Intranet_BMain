@@ -20,10 +20,9 @@ import { Role } from 'src/auth/models/roles.model'
 import { PayloadToken } from 'src/auth/models/token.model'
 import { MongoIdPipe } from 'src/common/mongo-id.pipe'
 import { WhyDTO } from 'src/modules/directive/dtos/Directive.dto'
-import { UserDTO } from 'src/modules/users/dtos/user.dto'
 import handleError from 'src/res/handleError'
 import handleRes from 'src/res/handleRes'
-import { UpdateStudentDTO } from '../dtos/student.dto'
+import { StudentDTO, UpdateStudentDTO } from '../dtos/student.dto'
 import { StudentsService } from '../service/students.service'
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -58,7 +57,7 @@ export class StudentsController {
     async newStudent(
         @Res() res: Response,
         @Req() req: Request,
-        @Body() student: UserDTO,
+        @Body() student: StudentDTO,
     ) {
         try {
             const user: PayloadToken = req.user
@@ -79,7 +78,7 @@ export class StudentsController {
     async newStudents(
         @Res() res: Response,
         @Req() req: Request,
-        @Body() students: UserDTO[],
+        @Body() students: StudentDTO[],
     ) {
         try {
             const user: PayloadToken = req.user

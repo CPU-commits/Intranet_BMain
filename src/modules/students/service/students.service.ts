@@ -1,20 +1,42 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+    forwardRef,
+    Inject,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { Role } from 'src/auth/models/roles.model'
 import { Collections } from 'src/modules/history/models/collections.model'
 import { HistoryService } from 'src/modules/history/service/history.service'
-import { UpdateUserDTO, UserDTO } from 'src/modules/users/dtos/user.dto'
+import { UpdateUserDTO } from 'src/modules/users/dtos/user.dto'
 import { UsersService } from 'src/modules/users/services/users/users.service'
+import { StudentDTO } from '../dtos/student.dto'
 import { Student } from '../entities/student.entity'
 
 @Injectable()
 export class StudentsService {
     constructor(
         @InjectModel(Student.name) private studentModel: Model<Student>,
+        @Inject(forwardRef(() => UsersService))
         private usersService: UsersService,
         private historyService: HistoryService,
     ) {}
+
+    async getDataByIDUser(studentId: string) {
+        return await this.studentModel
+            .findOne({ user: studentId })
+            .populate('user', { password: 0 })
+            .populate({
+                path: 'course',
+                select: 'section course',
+                populate: {
+                    path: 'course',
+                    select: 'course',
+                },
+            })
+            .exec()
+    }
 
     async getStudentByIDUser(studentId: string) {
         return await this.studentModel
@@ -64,6 +86,7 @@ export class StudentsService {
                         )
                         return {
                             _id: user._id,
+                            registration_number: student.registration_number,
                             name: user.name,
                             first_lastname: user.first_lastname,
                             second_lastname: user.second_lastname,
@@ -81,7 +104,7 @@ export class StudentsService {
             })
     }
 
-    async createStudent(student: UserDTO, user_id: string) {
+    async createStudent(student: StudentDTO, user_id: string) {
         const newUser = await this.usersService.createUser({
             ...student,
             user_type: Role.STUDENT,
@@ -99,7 +122,7 @@ export class StudentsService {
         return newUser
     }
 
-    async createStudents(students: UserDTO[], user_id: string) {
+    async createStudents(students: StudentDTO[], user_id: string) {
         const newStudents = await this.usersService.createUsers(
             students.map((student) => {
                 return {
@@ -130,10 +153,21 @@ export class StudentsService {
         student_id: string,
         user_id: string,
     ) {
+        const studentData = await this.getStudentByIDUser(student_id)
+        if (!studentData) throw new NotFoundException('No existe el estudiante')
         const updatedStudent = await this.usersService.updateUser(
             student,
             student_id,
         )
+        await this.studentModel
+            .findByIdAndUpdate(
+                studentData._id,
+                {
+                    $set: student,
+                },
+                { new: true },
+            )
+            .exec()
         this.historyService.insertChange(
             `Se actualiza alumno con RUT ${student.rut}`,
             Collections.USER,
