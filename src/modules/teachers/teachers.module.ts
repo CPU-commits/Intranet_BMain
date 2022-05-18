@@ -16,7 +16,7 @@ import { TeachersService } from './service/teachers.service'
             },
         ]),
         HistoryModule,
-        UsersModule,
+        forwardRef(() => UsersModule),
         forwardRef(() => CoursesModule),
     ],
     controllers: [TeachersController],

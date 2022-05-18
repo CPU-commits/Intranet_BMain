@@ -22,6 +22,7 @@ export class TeachersService {
     constructor(
         @InjectModel(Teacher.name) private teacherModel: Model<Teacher>,
         private historyService: HistoryService,
+        @Inject(forwardRef(() => UsersService))
         private usersService: UsersService,
         @Inject(forwardRef(() => CourseService))
         private coursesService: CourseService,
@@ -30,6 +31,22 @@ export class TeachersService {
     private async getImpartTeacher(teacherId: string) {
         return await this.teacherModel
             .findOne({ user: teacherId }, { user: 0 })
+            .populate('imparted.subject', { subject: 1 })
+            .populate({
+                path: 'imparted.course',
+                select: 'course section',
+                populate: {
+                    path: 'course',
+                    select: 'course',
+                },
+            })
+            .exec()
+    }
+
+    async getTeacherByIDUser(idUser: string) {
+        return await this.teacherModel
+            .findOne({ user: idUser })
+            .populate('user', { password: 0 })
             .populate('imparted.subject', { subject: 1 })
             .populate({
                 path: 'imparted.course',
