@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Role } from 'src/auth/models/roles.model'
 
-@Schema()
+@Schema({ versionKey: false })
 export class User {
     @Prop({ required: true, maxlength: 100 })
     name: string

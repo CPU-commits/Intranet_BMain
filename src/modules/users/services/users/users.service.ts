@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import * as bcrypt from 'bcrypt'
@@ -6,14 +6,75 @@ import * as bcrypt from 'bcrypt'
 import { UpdateUserDTO, UserDTO } from '../../dtos/user.dto'
 
 import { User } from '../../entities/user.entity'
+import { Role } from 'src/auth/models/roles.model'
+import { StudentsService } from 'src/modules/students/service/students.service'
+import { TeachersService } from 'src/modules/teachers/service/teachers.service'
 
 @Injectable()
 export class UsersService {
-    constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+    constructor(
+        @InjectModel(User.name) private userModel: Model<User>,
+        @Inject(forwardRef(() => StudentsService))
+        private studentsService: StudentsService,
+        @Inject(forwardRef(() => TeachersService))
+        private teachersService: TeachersService,
+    ) {}
 
     private async generatePassword(password: string) {
         const hash = await bcrypt.hashSync(password, 10)
         return hash
+    }
+
+    async getData(idUser: string, role: string) {
+        if (role === Role.STUDENT || role === Role.STUDENT_DIRECTIVE) {
+            const student = await this.studentsService.getDataByIDUser(idUser)
+            const {
+                email,
+                name,
+                first_lastname,
+                second_lastname,
+                rut,
+                status,
+            } = student.user as User
+            return {
+                email,
+                name,
+                first_lastname,
+                second_lastname,
+                rut,
+                status,
+                registration_number: student.registration_number,
+                course: student.course,
+            }
+        }
+        if (role === Role.TEACHER) {
+            const teacher = await this.teachersService.getTeacherByIDUser(
+                idUser,
+            )
+            const {
+                email,
+                name,
+                first_lastname,
+                second_lastname,
+                rut,
+                status,
+            } = teacher.user as User
+            return {
+                email,
+                name,
+                first_lastname,
+                second_lastname,
+
+                rut,
+                status,
+                imparted: teacher.imparted,
+            }
+        }
+        return await this.userModel
+            .findById(idUser, {
+                password: 0,
+            })
+            .exec()
     }
 
     async getUsers(
@@ -50,7 +111,10 @@ export class UsersService {
                 },
             ]
         }
-        const users = this.userModel.find(filter, select)
+        const users = this.userModel.find(filter, {
+            password: 0,
+            ...select,
+        })
         if (limit) users.limit(limit)
         if (skip) users.skip(skip)
         if (sort) users.sort(sort)
@@ -100,6 +164,20 @@ export class UsersService {
                 user_id,
                 {
                     $set: user,
+                },
+                { new: true },
+            )
+            .exec()
+    }
+
+    async changeEmail(email: string, userId: string) {
+        return await this.userModel
+            .findByIdAndUpdate(
+                userId,
+                {
+                    $set: {
+                        email,
+                    },
                 },
                 { new: true },
             )
