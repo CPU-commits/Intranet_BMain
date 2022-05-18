@@ -10,8 +10,8 @@ import { PayloadToken } from '../models/token.model'
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     constructor(@Inject(config.KEY) configService: ConfigType<typeof config>) {
         super({
-            jwtFromRequest: ExtractJwt.fromHeader('access-token'),
-            ignoreExpiration: true,
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            ignoreExpiration: false,
             secretOrKey: configService.jwtSecret,
         })
     }

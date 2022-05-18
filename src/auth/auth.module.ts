@@ -19,6 +19,10 @@ import { JwtStrategy } from './strategies/jwt.strategy'
             useFactory: (configService: ConfigType<typeof config>) => {
                 return {
                     secret: configService.jwtSecret,
+                    signOptions: {
+                        algorithm: 'HS256',
+                        expiresIn: '3h',
+                    },
                 }
             },
         }),

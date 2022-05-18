@@ -31,6 +31,7 @@ export class AuthService {
             user_type: user.user_type,
             _id: user._id,
             sub: 'JWT Token Intranet',
+            type: 'access',
         }
         return {
             success: true,
