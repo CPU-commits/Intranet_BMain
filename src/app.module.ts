@@ -17,7 +17,7 @@ import { HistoryModule } from './modules/history/history.module'
 // Config
 import config from './config'
 import { AuthModule } from './auth/auth.module'
-import { ClassroomModule } from './modules/classroom/classroom.module';
+import { ClassroomModule } from './modules/classroom/classroom.module'
 
 @Module({
     imports: [
