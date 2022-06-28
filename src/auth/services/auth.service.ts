@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt'
 
 import { UsersService } from 'src/modules/users/services/users/users.service'
 import { PayloadToken } from '../models/token.model'
+import { User } from 'src/modules/users/entities/user.entity'
 
 @Injectable()
 export class AuthService {
@@ -26,12 +27,13 @@ export class AuthService {
         }
     }
 
-    generateJWT(user: any) {
+    generateJWT(user: User & { _id: string }) {
         const payload: PayloadToken = {
             user_type: user.user_type,
             _id: user._id,
             sub: 'JWT Token Intranet',
             type: 'access',
+            name: `${user.name} ${user.first_lastname}`,
         }
         return {
             success: true,

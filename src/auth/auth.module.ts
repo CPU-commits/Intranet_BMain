@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { JwtModule } from '@nestjs/jwt'
+import { JwtModule, JwtSignOptions } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
 import { ConfigType } from '@nestjs/config'
 
@@ -17,12 +17,14 @@ import { JwtStrategy } from './strategies/jwt.strategy'
         JwtModule.registerAsync({
             inject: [config.KEY],
             useFactory: (configService: ConfigType<typeof config>) => {
+                const signOptions: JwtSignOptions = {
+                    algorithm: 'HS256',
+                }
+                if (configService.node_env === 'prod')
+                    signOptions.expiresIn = '3h'
                 return {
                     secret: configService.jwtSecret,
-                    signOptions: {
-                        algorithm: 'HS256',
-                        expiresIn: '3h',
-                    },
+                    signOptions,
                 }
             },
         }),
