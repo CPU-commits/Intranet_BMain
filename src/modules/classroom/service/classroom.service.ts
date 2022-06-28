@@ -10,6 +10,15 @@ export class ClassroomService {
         @InjectModel(ModuleClass.name) private moduleModel: Model<ModuleClass>,
     ) {}
 
+    async getModulesFromSection(idSection: string) {
+        return await this.moduleModel
+            .find({
+                section: idSection,
+                status: true,
+            })
+            .exec()
+    }
+
     async getModulesSemester(idSemester: string) {
         return await this.moduleModel
             .find({

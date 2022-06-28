@@ -4,6 +4,11 @@ import { CourseLetter } from 'src/modules/courses/entities/course_letter.entity'
 import { Semester } from 'src/modules/semesters/entities/semester.entity'
 import { Subject } from 'src/modules/subjects/entities/subject.entity'
 
+export class SubSection {
+    _id: Types.ObjectId
+    name: string
+}
+
 @Schema()
 export class ModuleClass {
     @Prop({ required: true, type: Types.ObjectId, ref: CourseLetter.name })
@@ -21,6 +26,23 @@ export class ModuleClass {
     */
     @Prop({ default: false, type: Boolean })
     status: boolean
+
+    @Prop({
+        type: [
+            {
+                _id: {
+                    type: Types.ObjectId,
+                },
+                name: {
+                    required: true,
+                    type: String,
+                    maxlength: 100,
+                    minlength: 3,
+                },
+            },
+        ],
+    })
+    sub_sections: Types.Array<SubSection>
 }
 
 export const ModuleClassSchema = SchemaFactory.createForClass(ModuleClass)
