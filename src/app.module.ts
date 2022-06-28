@@ -18,6 +18,7 @@ import { HistoryModule } from './modules/history/history.module'
 import config from './config'
 import { AuthModule } from './auth/auth.module'
 import { ClassroomModule } from './modules/classroom/classroom.module'
+import { AwsModule } from './modules/aws/aws.module'
 
 @Module({
     imports: [
@@ -41,6 +42,10 @@ import { ClassroomModule } from './modules/classroom/classroom.module'
                 NODE_ENV: Joi.string().required(),
                 CLIENT_URI: Joi.string().required(),
                 PORT: Joi.number().required(),
+                NATS_HOST: Joi.string().required(),
+                AWS_BUCKET: Joi.string().required(),
+                AWS_ACCESS_KEY_ID: Joi.string().required(),
+                AWS_SECRET_ACCESS_KEY: Joi.string().required(),
             }),
         }),
         UsersModule,
@@ -49,6 +54,7 @@ import { ClassroomModule } from './modules/classroom/classroom.module'
         HistoryModule,
         AuthModule,
         ClassroomModule,
+        AwsModule,
     ],
     controllers: [AppController],
     providers: [AppService],
