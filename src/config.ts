@@ -1,6 +1,12 @@
 import { registerAs } from '@nestjs/config'
 
+enum NodeEnv {
+    'dev',
+    'prod',
+}
+
 export default registerAs('config', () => {
+    const nodeEnv = process.env.NODE_ENV as keyof typeof NodeEnv
     return {
         port: parseInt(process.env.PORT, 10),
         client: {
@@ -15,6 +21,10 @@ export default registerAs('config', () => {
             connection: process.env.MONGO_CONNECTION,
         },
         jwtSecret: process.env.JWT_SECRET_KEY,
-        node_env: process.env.NODE_ENV,
+        node_env: nodeEnv,
+        aws: {
+            bucket: process.env.AWS_BUCKET,
+        },
+        nats: process.env.NATS_HOST,
     }
 })
