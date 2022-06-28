@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Body,
     Controller,
     Delete,
@@ -8,8 +9,11 @@ import {
     Put,
     Req,
     Res,
+    UploadedFile,
     UseGuards,
+    UseInterceptors,
 } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { Request, Response } from 'express'
 import { Roles } from 'src/auth/decorators/roles.decorator'
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard'
@@ -29,6 +33,24 @@ import { CourseService } from '../service/course.service'
 export class CourseController {
     constructor(private courseService: CourseService) {}
     // Courses
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_course/:id')
+    async getCourse(
+        @Res() res: Response,
+        @Param('id', MongoIdPipe) idCourse: string,
+    ) {
+        try {
+            const course = await this.courseService.getCourseCustom({
+                _id: idCourse,
+            })
+            handleRes(res, {
+                course,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Get('/get_courses')
     async getCourses(@Res() res: Response) {
@@ -129,23 +151,62 @@ export class CourseController {
     }
 
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_sections_course/:id')
+    async getSectionsCourse(
+        @Res() res: Response,
+        @Param('id', MongoIdPipe) idCourse: string,
+    ) {
+        try {
+            const sections = await this.courseService.getSectionsFromCourse(
+                idCourse,
+            )
+            handleRes(res, {
+                sections,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Post('/new_section/:id')
+    @UseInterceptors(FileInterceptor('image'))
     async newSection(
         @Res() res: Response,
         @Req() req: Request,
         @Param('id', MongoIdPipe) idCourse: string,
+        @UploadedFile() file: Express.Multer.File,
         @Body() section: SectionDTO,
     ) {
         try {
+            if (!file.mimetype.includes('image'))
+                throw new BadRequestException('El archivo debe ser una imágen')
             const user: PayloadToken = req.user
             const sectionData = await this.courseService.newSection(
                 section.section,
+                file,
                 idCourse,
                 user._id,
             )
             handleRes(res, {
                 section: sectionData,
             })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Post('/remove_teacher_section/:id')
+    async removeTeacherSection(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('id', MongoIdPipe) idSection: string,
+    ) {
+        try {
+            const user: PayloadToken = req.user
+            await this.courseService.removeTeacherSection(idSection, user._id)
+            handleRes(res)
         } catch (err) {
             handleError(err, res)
         }
@@ -167,6 +228,28 @@ export class CourseController {
                 user._id,
             )
             handleRes(res)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Put('/change_image/:id')
+    @UseInterceptors(FileInterceptor('image'))
+    async changeImage(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('id', MongoIdPipe) idSection: string,
+        @UploadedFile() file: Express.Multer.File,
+    ) {
+        try {
+            const user = req.user as PayloadToken
+            const image = await this.courseService.changeSectionImage(
+                file,
+                idSection,
+                user._id,
+            )
+            handleRes(res, image)
         } catch (err) {
             handleError(err, res)
         }

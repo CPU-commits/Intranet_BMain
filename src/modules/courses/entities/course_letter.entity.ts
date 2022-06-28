@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Types } from 'mongoose'
-import { User } from 'src/modules/users/entities/user.entity'
+import { File } from 'src/modules/aws/entities/file.entity'
+import { Teacher } from 'src/modules/teachers/entities/teacher.entity'
 import { Course } from './course.entity'
 
 @Schema()
@@ -8,11 +9,17 @@ export class CourseLetter {
     @Prop({ required: true })
     section: string
 
-    @Prop({ type: Types.ObjectId, ref: User.name })
-    header_teacher: Types.ObjectId | User
+    @Prop({ required: true, type: Types.ObjectId, ref: File.name })
+    file: Types.ObjectId | File
+
+    @Prop({ type: Types.ObjectId, ref: 'Teacher' })
+    header_teacher: Types.ObjectId | Teacher
 
     @Prop({ required: true, type: Types.ObjectId, ref: 'Course' })
     course: Types.ObjectId | Course
+
+    @Prop({ default: true })
+    status: boolean
 }
 
 export const CourseLetterSchema = SchemaFactory.createForClass(CourseLetter)

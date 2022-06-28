@@ -10,6 +10,11 @@ import {
     CourseLetterSchema,
 } from './entities/course_letter.entity'
 import { TeachersModule } from '../teachers/teachers.module'
+import { ClassroomModule } from '../classroom/classroom.module'
+import { AwsModule } from '../aws/aws.module'
+import { ClientsModule, Transport } from '@nestjs/microservices'
+import config from 'src/config'
+import { ConfigType } from '@nestjs/config'
 
 @Module({
     imports: [
@@ -29,6 +34,22 @@ import { TeachersModule } from '../teachers/teachers.module'
         ]),
         HistoryModule,
         forwardRef(() => TeachersModule),
+        ClassroomModule,
+        AwsModule,
+        ClientsModule.registerAsync([
+            {
+                name: 'NATS_CLIENT',
+                inject: [config.KEY],
+                useFactory: (configService: ConfigType<typeof config>) => {
+                    return {
+                        transport: Transport.NATS,
+                        options: {
+                            servers: [`nats://${configService.nats}:4222`],
+                        },
+                    }
+                },
+            },
+        ]),
     ],
     providers: [CourseService],
     controllers: [CourseController],
