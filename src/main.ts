@@ -2,15 +2,18 @@ import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { MicroserviceOptions, Transport } from '@nestjs/microservices'
 import { AppModule } from './app.module'
+import config from './config'
 
 async function bootstrap() {
+    // Config
+    const configService = config()
     // App
     const app = await NestFactory.create(AppModule)
     // NATS Microservice
     app.connectMicroservice<MicroserviceOptions>({
         transport: Transport.NATS,
         options: {
-            servers: ['nats://nats:4222'],
+            servers: [`nats://${configService.nats}:4222`],
         },
     })
     await app.startAllMicroservices()
