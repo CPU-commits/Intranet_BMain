@@ -104,13 +104,30 @@ export class StudentsService {
             })
     }
 
+    async getStudentsFromIdCourse(idCourse: string) {
+        return await this.studentModel
+            .find({
+                course: idCourse,
+            })
+            .populate('user', {
+                name: 1,
+                first_lastname: 1,
+                second_lastname: 1,
+                rut: 1,
+            })
+            .sort({ name: 1, first_lastname: 1, second_lastname: 1 })
+            .exec()
+    }
+
     async createStudent(student: StudentDTO, user_id: string) {
+        const { registration_number, ...rest } = student
         const newUser = await this.usersService.createUser({
-            ...student,
+            ...rest,
             user_type: Role.STUDENT,
         })
         const newStudent = new this.studentModel({
             user: newUser._id.toString(),
+            registration_number,
         })
         await newStudent.save()
         this.historyService.insertChange(
@@ -125,15 +142,18 @@ export class StudentsService {
     async createStudents(students: StudentDTO[], user_id: string) {
         const newStudents = await this.usersService.createUsers(
             students.map((student) => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { registration_number: _, ...rest } = student
                 return {
-                    ...student,
+                    ...rest,
                     user_type: Role.STUDENT,
                 }
             }),
         )
-        const response = newStudents.map((student) => {
+        const response = newStudents.map((student, i) => {
             return {
                 user: student._id.toString(),
+                registration_number: students[i].registration_number,
             }
         })
         await this.studentModel.insertMany(response)
