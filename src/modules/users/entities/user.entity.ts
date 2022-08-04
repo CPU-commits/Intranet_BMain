@@ -27,6 +27,7 @@ export class User {
             Role.TEACHER,
             Role.DIRECTIVE,
             Role.DIRECTOR,
+            Role.LIBRARIAN,
         ],
     })
     user_type: string
