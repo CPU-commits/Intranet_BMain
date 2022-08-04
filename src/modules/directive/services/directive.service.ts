@@ -91,17 +91,28 @@ export class DirectiveService {
     async dismissDirective(directive_id: string, why: string, user_id: string) {
         const directive = await this.usersService.getUserID(directive_id)
         if (!directive) throw new NotFoundException('No existe el directivo')
+        const status = directive.status === 0 ? 1 : 0
         const dismiss = await this.usersService.changeStatusUser(
             directive_id,
-            directive.status === 0 ? 1 : 0,
+            status,
         )
-        this.historyService.insertChange(
-            `Se da de baja al directivo con RUT ${directive.rut}`,
-            Collections.USER,
-            user_id,
-            'dismiss',
-            why,
-        )
+        if (!status) {
+            this.historyService.insertChange(
+                `Se da de baja al directivo con RUT ${directive.rut}`,
+                Collections.USER,
+                user_id,
+                'dismiss',
+                why,
+            )
+        } else {
+            this.historyService.insertChange(
+                `Se reintegra al directivo con RUT ${directive.rut}`,
+                Collections.USER,
+                user_id,
+                'reintegrate',
+                why,
+            )
+        }
         return dismiss
     }
 }

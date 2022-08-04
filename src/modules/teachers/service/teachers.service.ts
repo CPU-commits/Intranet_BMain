@@ -139,9 +139,9 @@ export class TeachersService {
 
     async createTeachers(teachers: UserDTO[], user_id: string) {
         const newTeachers = await this.usersService.createUsers(
-            teachers.map((directive) => {
+            teachers.map((teacher) => {
                 return {
-                    ...directive,
+                    ...teacher,
                     user_type: Role.TEACHER,
                 }
             }),
@@ -154,7 +154,7 @@ export class TeachersService {
         await this.teacherModel.insertMany(response)
         this.historyService.insertChange(
             `Se añaden profesores con RUTs: ${newTeachers
-                .map((directive) => directive.rut)
+                .map((teacher) => teacher.rut)
                 .join(', ')}`,
             Collections.USER,
             user_id,
@@ -164,21 +164,21 @@ export class TeachersService {
     }
 
     async updateTeacher(
-        directive: UpdateUserDTO,
-        directive_id: string,
+        teacher: UpdateUserDTO,
+        teacher_id: string,
         idUser: string,
     ) {
-        const updatedDirective = await this.usersService.updateUser(
-            directive,
-            directive_id,
+        const updatedteacher = await this.usersService.updateUser(
+            teacher,
+            teacher_id,
         )
         this.historyService.insertChange(
-            `Se actualiza profesor con RUT ${directive.rut}`,
+            `Se actualiza profesor con RUT ${teacher.rut}`,
             Collections.USER,
             idUser,
             'update',
         )
-        return updatedDirective
+        return updatedteacher
     }
 
     async addSubjectCourse(
@@ -231,20 +231,31 @@ export class TeachersService {
         return teacherUpdated
     }
 
-    async dismissTeacher(directive_id: string, why: string, user_id: string) {
-        const directive = await this.usersService.getUserID(directive_id)
-        if (!directive) throw new NotFoundException('No existe el directivo')
+    async dismissTeacher(teacher_id: string, why: string, user_id: string) {
+        const teacher = await this.usersService.getUserID(teacher_id)
+        if (!teacher) throw new NotFoundException('No existe el directivo')
+        const status = teacher.status === 0 ? 1 : 0
         const dismiss = await this.usersService.changeStatusUser(
-            directive_id,
-            directive.status === 0 ? 1 : 0,
+            teacher_id,
+            status,
         )
-        this.historyService.insertChange(
-            `Se da de baja al profesor con RUT ${directive.rut}`,
-            Collections.USER,
-            user_id,
-            'dismiss',
-            why,
-        )
+        if (!status) {
+            this.historyService.insertChange(
+                `Se da de baja al profesor con RUT ${teacher.rut}`,
+                Collections.USER,
+                user_id,
+                'dismiss',
+                why,
+            )
+        } else {
+            this.historyService.insertChange(
+                `Se reintegra el profesor con RUT ${teacher.rut}`,
+                Collections.USER,
+                user_id,
+                'reintegrate',
+                why,
+            )
+        }
         return dismiss
     }
 }

@@ -57,7 +57,9 @@ export class StudentsService {
         skip?: number,
         limit?: number,
         total = false,
+        actived = false,
     ) {
+        const status = actived ? 1 : undefined
         return await this.usersService
             .getUsers(
                 {
@@ -65,6 +67,7 @@ export class StudentsService {
                         { user_type: Role.STUDENT },
                         { user_type: Role.STUDENT_DIRECTIVE },
                     ],
+                    status,
                 },
                 {
                     password: 0,
@@ -79,6 +82,7 @@ export class StudentsService {
                 total,
             )
             .then(async (data) => {
+                console.log(data)
                 const students = await Promise.all(
                     data.users.map(async (user) => {
                         const student = await this.getStudentByIDUser(
@@ -200,17 +204,28 @@ export class StudentsService {
     async dismissStudent(student_id: string, why: string, user_id: string) {
         const student = await this.usersService.getUserID(student_id)
         if (!student) throw new NotFoundException('No existe el alumno')
+        const status = student.status === 0 ? 1 : 0
         const dismiss = await this.usersService.changeStatusUser(
             student_id,
-            student.status === 0 ? 1 : 0,
+            status,
         )
-        this.historyService.insertChange(
-            `Se va de la institución el alumno con RUT ${student.rut}`,
-            Collections.USER,
-            user_id,
-            'dismiss',
-            why,
-        )
+        if (!status) {
+            this.historyService.insertChange(
+                `Se va de la institución el alumno con RUT ${student.rut}`,
+                Collections.USER,
+                user_id,
+                'dismiss',
+                why,
+            )
+        } else {
+            this.historyService.insertChange(
+                `Se reintegra a la institución el alumno con RUT ${student.rut}`,
+                Collections.USER,
+                user_id,
+                'reintegrate',
+                why,
+            )
+        }
         return dismiss
     }
 }

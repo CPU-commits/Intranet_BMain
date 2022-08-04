@@ -3,8 +3,6 @@ import {
     Controller,
     Get,
     Param,
-    ParseBoolPipe,
-    ParseIntPipe,
     Post,
     Put,
     Query,
@@ -30,14 +28,15 @@ import { StudentsService } from '../service/students.service'
 export class StudentsController {
     constructor(private studentsService: StudentsService) {}
 
-    @Roles(Role.DIRECTOR, Role.DIRECTIVE)
+    @Roles(Role.DIRECTOR, Role.DIRECTIVE, Role.TEACHER)
     @Get('/get_students')
     async getStudents(
         @Res() res: Response,
-        @Query('skip', ParseIntPipe) skip?: number,
-        @Query('limit', ParseIntPipe) limit?: number,
+        @Query('skip') skip?: number,
+        @Query('limit') limit?: number,
         @Query('search') search?: string,
-        @Query('total', ParseBoolPipe) getTotal?: boolean,
+        @Query('total') getTotal?: boolean,
+        @Query('actived') actived?: boolean,
     ) {
         try {
             const students = await this.studentsService.getStudents(
@@ -45,6 +44,7 @@ export class StudentsController {
                 skip,
                 limit,
                 getTotal,
+                actived,
             )
             handleRes(res, students)
         } catch (err) {
