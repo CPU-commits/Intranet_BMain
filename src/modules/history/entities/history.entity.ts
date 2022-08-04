@@ -33,6 +33,7 @@ export class History {
             TypeChange.DELETE,
             TypeChange.UPDATE,
             TypeChange.DISMISS,
+            TypeChange.REINTEGRATE,
         ],
     })
     type_change: string

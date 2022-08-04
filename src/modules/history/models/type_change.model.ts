@@ -3,6 +3,7 @@ export enum TypeChange {
     UPDATE = 'update',
     DELETE = 'delete',
     DISMISS = 'dismiss',
+    REINTEGRATE = 'reintegrate',
 }
 
 export enum TypeChangeKey {
@@ -10,4 +11,5 @@ export enum TypeChangeKey {
     'update',
     'delete',
     'dismiss',
+    'reintegrate',
 }
