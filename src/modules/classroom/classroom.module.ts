@@ -4,6 +4,10 @@ import { StudentsModule } from '../students/students.module'
 import { ModuleClass, ModuleClassSchema } from './entities/module.entity'
 import { ClassroomService } from './service/classroom.service'
 import { ClassroomController } from './controller/classroom.controller'
+import {
+    ModuleHistory,
+    ModuleHistorySchema,
+} from './entities/module_history.entity'
 
 @Module({
     imports: [
@@ -11,6 +15,10 @@ import { ClassroomController } from './controller/classroom.controller'
             {
                 name: ModuleClass.name,
                 schema: ModuleClassSchema,
+            },
+            {
+                name: ModuleHistory.name,
+                schema: ModuleHistorySchema,
             },
         ]),
         StudentsModule,
