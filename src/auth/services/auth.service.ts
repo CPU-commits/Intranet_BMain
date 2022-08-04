@@ -39,6 +39,7 @@ export class AuthService {
             success: true,
             access_token: this.jwtService.sign(payload),
             user: {
+                _id: user._id,
                 name: `${user.name} ${user.first_lastname}`,
                 status: user.status,
                 user_type: user.user_type,

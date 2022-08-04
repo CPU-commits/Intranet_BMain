@@ -1,4 +1,5 @@
 export enum Role {
+    LIBRARIAN = 'g',
     DIRECTOR = 'f',
     DIRECTIVE = 'e',
     TEACHER = 'd',
