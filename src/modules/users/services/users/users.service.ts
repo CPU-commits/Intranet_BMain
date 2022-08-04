@@ -80,7 +80,7 @@ export class UsersService {
     async getUsers(
         filter?: any,
         select = null,
-        sort?,
+        sort?: any,
         search?: string,
         limit?: number,
         skip?: number,
@@ -88,28 +88,40 @@ export class UsersService {
     ) {
         if (!filter) filter = {}
         if (search) {
-            filter.$or = [
+            let filterOr: Array<any>
+            if (filter?.$or?.length > 0) filterOr = [...filter.$or]
+            const searchAnd = [
+                { $or: filter?.$or ? filterOr : [{}] },
                 {
-                    name: {
-                        $regex: new RegExp(search, 'i'),
-                    },
-                },
-                {
-                    first_lastname: {
-                        $regex: new RegExp(search, 'i'),
-                    },
-                },
-                {
-                    second_lastname: {
-                        $regex: new RegExp(search, 'i'),
-                    },
-                },
-                {
-                    rut: {
-                        $regex: new RegExp(search, 'i'),
-                    },
+                    $or: [
+                        {
+                            name: {
+                                $regex: new RegExp(search, 'i'),
+                            },
+                        },
+                        {
+                            first_lastname: {
+                                $regex: new RegExp(search, 'i'),
+                            },
+                        },
+                        {
+                            second_lastname: {
+                                $regex: new RegExp(search, 'i'),
+                            },
+                        },
+                        {
+                            rut: {
+                                $regex: new RegExp(search, 'i'),
+                            },
+                        },
+                    ],
                 },
             ]
+            if (filter.$and) {
+                filter.$and = [...filter.$and, ...searchAnd]
+            } else {
+                filter.$and = searchAnd
+            }
         }
         const users = this.userModel.find(filter, {
             password: 0,
