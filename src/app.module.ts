@@ -19,6 +19,8 @@ import config from './config'
 import { AuthModule } from './auth/auth.module'
 import { ClassroomModule } from './modules/classroom/classroom.module'
 import { AwsModule } from './modules/aws/aws.module'
+import { BookLifeModule } from './modules/book_life/book_life.module'
+import { LibraryModule } from './modules/library/library.module'
 
 @Module({
     imports: [
@@ -55,6 +57,8 @@ import { AwsModule } from './modules/aws/aws.module'
         AuthModule,
         ClassroomModule,
         AwsModule,
+        BookLifeModule,
+        LibraryModule,
     ],
     controllers: [AppController],
     providers: [AppService],
