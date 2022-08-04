@@ -21,5 +21,6 @@ import { ClassroomModule } from '../classroom/classroom.module'
     ],
     providers: [SemestersService],
     controllers: [SemestersController],
+    exports: [SemestersService],
 })
 export class SemestersModule {}

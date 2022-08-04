@@ -26,7 +26,6 @@ import { SemestersService } from '../service/semesters.service'
 export class SemestersController {
     constructor(private semestersService: SemestersService) {}
 
-    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Get('/get_semesters')
     async getSemesters(@Res() res: Response) {
         try {

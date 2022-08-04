@@ -44,7 +44,10 @@ export class SemestersService {
     }
 
     async getSemesters() {
-        return await this.semesterModel.find().exec()
+        return await this.semesterModel
+            .find()
+            .sort({ year: -1, semester: -1 })
+            .exec()
     }
 
     async newSemester(semester: SemesterDTO, userId: string) {
