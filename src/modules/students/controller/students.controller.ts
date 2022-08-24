@@ -21,6 +21,7 @@ import { WhyDTO } from 'src/modules/directive/dtos/Directive.dto'
 import handleError from 'src/res/handleError'
 import handleRes from 'src/res/handleRes'
 import { StudentDTO, UpdateStudentDTO } from '../dtos/student.dto'
+import { UpdateVotingDTO, VotingDTO } from '../dtos/voting.dto'
 import { StudentsService } from '../service/students.service'
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -47,6 +48,44 @@ export class StudentsController {
                 actived,
             )
             handleRes(res, students)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Get('/get_voting_status')
+    async getVotingStatus(@Res() res: Response) {
+        try {
+            const votingStatus = await this.studentsService.getVotingStatus()
+            handleRes(res, {
+                status: votingStatus,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Get('/get_voting')
+    async getVoting(@Res() res: Response) {
+        try {
+            const voting = await this.studentsService.getVoting()
+            handleRes(res, {
+                voting,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.STUDENT, Role.STUDENT_DIRECTIVE)
+    @Get('/get_my_vote')
+    async getMyVote(@Res() res: Response, @Req() req: Request) {
+        try {
+            const user = req.user
+            const myVote = await this.studentsService.getMyVote(user._id)
+            handleRes(res, {
+                my_vote: myVote,
+            })
         } catch (err) {
             handleError(err, res)
         }
@@ -111,6 +150,38 @@ export class StudentsController {
     }
 
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
+    @Post('/upload_voting')
+    async uploadVoting(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Body() voting: VotingDTO,
+    ) {
+        try {
+            const user = req.user as PayloadToken
+            await this.studentsService.uploadVoting(voting, user._id)
+            handleRes(res)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.STUDENT, Role.STUDENT_DIRECTIVE)
+    @Post('/vote/:id')
+    async vote(
+        @Res() res: Response,
+        @Param('id', MongoIdPipe) idList: string,
+        @Req() req: Request,
+    ) {
+        try {
+            const user = req.user as PayloadToken
+            await this.studentsService.vote(user._id, idList)
+            handleRes(res)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTOR, Role.DIRECTIVE)
     @Put('/edit_student/:id')
     async editStudent(
         @Res() res: Response,
@@ -126,6 +197,27 @@ export class StudentsController {
                 user._id,
             )
             handleRes(res)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTOR, Role.DIRECTIVE)
+    @Put('/edit_voting')
+    async editVoting(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Body() voting: UpdateVotingDTO,
+    ) {
+        try {
+            const user = req.user as PayloadToken
+            const votingData = await this.studentsService.updateVoting(
+                voting,
+                user._id,
+            )
+            handleRes(res, {
+                voting: votingData,
+            })
         } catch (err) {
             handleError(err, res)
         }
