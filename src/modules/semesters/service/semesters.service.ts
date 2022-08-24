@@ -1,6 +1,8 @@
 import {
     BadRequestException,
     ConflictException,
+    forwardRef,
+    Inject,
     Injectable,
     NotFoundException,
 } from '@nestjs/common'
@@ -20,7 +22,9 @@ export class SemestersService {
     constructor(
         @InjectModel(Semester.name) private semesterModel: Model<Semester>,
         private historyService: HistoryService,
+        @Inject(forwardRef(() => CourseService))
         private coursesService: CourseService,
+        @Inject(forwardRef(() => ClassroomService))
         private classroomService: ClassroomService,
     ) {}
 
