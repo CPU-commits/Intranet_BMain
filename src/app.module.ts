@@ -21,6 +21,7 @@ import { ClassroomModule } from './modules/classroom/classroom.module'
 import { AwsModule } from './modules/aws/aws.module'
 import { BookLifeModule } from './modules/book_life/book_life.module'
 import { LibraryModule } from './modules/library/library.module'
+import { CollegeModule } from './modules/college/college.module'
 
 @Module({
     imports: [
@@ -59,6 +60,7 @@ import { LibraryModule } from './modules/library/library.module'
         AwsModule,
         BookLifeModule,
         LibraryModule,
+        CollegeModule,
     ],
     controllers: [AppController],
     providers: [AppService],
