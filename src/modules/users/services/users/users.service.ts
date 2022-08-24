@@ -133,7 +133,7 @@ export class UsersService {
         return {
             users: await users.exec(),
             total: total
-                ? await this.userModel.find().count().exec()
+                ? await this.userModel.count(filter).exec()
                 : undefined,
         }
     }
