@@ -1,9 +1,9 @@
 export const VotingKey = 'voting'
 export enum VotingValues {
-    'opened',
-    'uploaded',
-    'in progress',
-    'closed',
+    'opened', // Can open voting
+    'uploaded', // Uploaded and wait to date
+    'in progress', // In progress...
+    'closed', // Closed, and wait for open
 }
 export enum VotingEnumValues {
     OPENED = 'opened',

@@ -6,16 +6,19 @@ import {
     NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
+import { ObjectId } from 'mongodb'
 import { Model } from 'mongoose'
 import { Role } from 'src/auth/models/roles.model'
+import { CourseLetter } from 'src/modules/courses/entities/course_letter.entity'
 import { CourseService } from 'src/modules/courses/service/course.service'
 import { Collections } from 'src/modules/history/models/collections.model'
 import { HistoryService } from 'src/modules/history/service/history.service'
+import { Subject } from 'src/modules/subjects/entities/subject.entity'
 import { UpdateUserDTO, UserDTO } from 'src/modules/users/dtos/user.dto'
 import { User } from 'src/modules/users/entities/user.entity'
 import { UsersService } from 'src/modules/users/services/users/users.service'
 import { SubjectCourseDTO } from '../dtos/subject_course.dto'
-import { Teacher } from '../entities/teacher.entity'
+import { Imparted, Teacher } from '../entities/teacher.entity'
 
 @Injectable()
 export class TeachersService {
@@ -221,9 +224,46 @@ export class TeachersService {
             .exec()
         const teacherUser = teacher.user as User
         const teacherUpdated = await this.getTeacherByID(idTeacher)
+        const index = teacherUpdated.imparted.findIndex((i) => {
+            const course = i.course as CourseLetter & { _id: ObjectId }
+            const subject = i.subject as Subject & { _id: ObjectId }
+            if (
+                course._id.toString() === subjectCourse.course &&
+                subject._id.toString() === subjectCourse.subject
+            )
+                return i
+        })
+
+        const section = teacherUpdated.imparted[index].course as CourseLetter
+        const subject = teacherUpdated.imparted[index].subject as Subject
         this.historyService.insertChange(
-            `Se añade la materia y curso (${teacherUpdated.imparted}) al
+            `Se añade la materia y curso (${section.course} ${section.section} - ${subject.subject}) al
             profesor con RUT ${teacherUser.rut}`,
+            Collections.USER,
+            idUser,
+            'update',
+        )
+        return teacherUpdated
+    }
+
+    async deleteSubjectCourse(idTeacher: string, idImparted: string, idUser: string) {
+        const teacher = await this.getTeacherByID(idTeacher)
+        if (!teacher) throw new NotFoundException('No existe el profesor')
+        const teacherUpdated = await this.teacherModel.findByIdAndUpdate(
+            idTeacher,
+            {
+                $pull: {
+                    imparted: {
+                        _id: idImparted,
+                    },
+                },
+            },
+            {
+                new: true,
+            },
+        )
+        this.historyService.insertChange(
+            `Se elimina una materia y curso al profesor con RUT ${(teacher.user as User).rut}`,
             Collections.USER,
             idUser,
             'update',

@@ -7,7 +7,7 @@ import {
     NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { FilterQuery, Model, ProjectionType } from 'mongoose'
 import { v4 as uuid4 } from 'uuid'
 
 import { AwsService } from 'src/modules/aws/service/aws.service'
@@ -47,8 +47,8 @@ export class CourseService {
     }
 
     async getCoursesCustom(
-        query = null,
-        filter = null,
+        query: FilterQuery<Course> = null,
+        filter: ProjectionType<Course> = null,
         count?: boolean,
         sections = true,
     ): Promise<Course[] | number> {
@@ -58,14 +58,23 @@ export class CourseService {
             .populate('cycle', { cycle: 1 })
             .populate('subjects', { subject: 1 })
         if (sections)
-            courses.populate('sections', { section: 1, header_teacher: 1 })
+            courses.populate('sections', {
+                section: 1,
+                header_teacher: 1,
+                is_next_section_variable: 1,
+            })
         if (count) courses.count()
         return await courses.exec()
     }
 
     async getSectionCustom(queryAdd?: any, filter = null) {
-        const query = { status: true, ...queryAdd }
-        return await this.sectionModel.findOne(query, filter).exec()
+        const query = {
+            $and: [
+                { status: true },
+                queryAdd,
+            ],
+        }
+        return await this.courseModel.findOne(query, filter).exec()
     }
 
     async getSubjectSection(subjectId: string, sectionId: string) {
@@ -84,6 +93,13 @@ export class CourseService {
         return await this.sectionModel
             .find({ status: true })
             .populate('course', { course: 1 })
+            .exec()
+    }
+
+    async getVariableSections() {
+        return await this.sectionModel
+            .find({ status: true, is_next_section_variable: true })
+            .populate('course', { course: 1, level: 1 })
             .exec()
     }
 
@@ -213,31 +229,105 @@ export class CourseService {
             .exec()
     }
 
-    async getSectionsFromCourse(courseId: string) {
+    async allSectionsHaveNextSection() {
+        const { sectionsWNextSecion, allSections } = await Promise.all([
+            this.sectionModel
+                .find(
+                    {
+                        $and: [
+                            {
+                                $or: [
+                                    { next_section: { $exists: true } },
+                                    { is_next_section_variable: true },
+                                ],
+                            },
+                            { status: true },
+                        ],
+                    },
+                    { _id: 1, course: 1 },
+                )
+                .populate('course', { isFinal: 1 })
+                .exec(),
+            this.sectionModel
+                .find(
+                    { status: true },
+                    { _id: 1, course: 1, is_next_section_variable: 1 },
+                )
+                .populate('course', { isFinal: 1 })
+                .exec(),
+        ]).then((data) => {
+            const getSectionsIsNotFinal = (section: CourseLetter) => {
+                const course = section.course as Course
+                if (!course.isFinal) return section
+            }
+            return {
+                sectionsWNextSecion: data[0].filter(getSectionsIsNotFinal),
+                allSections: data[1].filter(getSectionsIsNotFinal),
+            }
+        })
+        return sectionsWNextSecion.length === allSections.length
+    }
+
+    async getSectionsFromCourse(courseId: string, getFiles = true) {
         const sections = await this.sectionModel
             .find({ course: courseId, status: true })
             .populate('file', { key: 1, title: 1 })
-            .exec()
-        const images = await lastValueFrom(
-            this.natsClient.send(
-                'get_aws_token_access',
-                sections.map((section) => {
-                    const file = section.file as File
-                    return file.key
-                }),
-            ),
-        )
-        return sections.map((section, i) => {
-            const file = section.file as File
-            return {
-                _id: section._id,
-                section: section.section,
-                file: {
-                    url: images[i],
-                    title: file.title,
+            .populate({
+                path: 'next_section',
+                select: 'section course',
+                populate: {
+                    path: 'course',
+                    select: 'course',
                 },
-            }
-        })
+            })
+            .exec()
+        if (getFiles) {
+            const images = await lastValueFrom(
+                this.natsClient.send(
+                    'get_aws_token_access',
+                    sections.map((section) => {
+                        const file = section.file as File
+                        return file.key
+                    }),
+                ),
+            )
+            return sections.map((section, i) => {
+                const file = section.file as File
+                return {
+                    _id: section._id,
+                    is_next_section_variable: section.is_next_section_variable,
+                    section: section.section,
+                    file: {
+                        url: images[i],
+                        title: file.title,
+                    },
+                    next_section: section.next_section,
+                    header_teacher: section.header_teacher,
+                }
+            })
+        }
+        return sections
+    }
+
+    async getSectionsNextLevel(idCourse: string) {
+        const course = await this.getCourseByID(idCourse)
+        if (!course) throw new NotFoundException('No existe el curso')
+        if (course.isFinal)
+            throw new BadRequestException(
+                'El curso final no tiene siguientes cursos',
+            )
+        const nextCourse = await this.getCourseByLevel(course.level + 1)
+        if (!nextCourse)
+            throw new BadRequestException(
+                'Registre el siguiente nivel para obtener el siguiente curso',
+            )
+        const sections = await this.getSectionsFromCourse(
+            nextCourse._id.toString(),
+        )
+        return {
+            course: nextCourse,
+            sections,
+        }
     }
 
     async newSection(
@@ -410,6 +500,102 @@ export class CourseService {
             'update',
         )
         return image[0]
+    }
+
+    async selectNextSection(
+        idSection: string,
+        idUser: string,
+        idNextSection?: string,
+    ) {
+        let message: string
+        if (idNextSection) {
+            const { section, nextSection } = await Promise.all([
+                this.getSectionById(idSection),
+                this.getSectionById(idNextSection),
+            ])
+                .then((data) => {
+                    if (!data[0] || !data[1])
+                        throw new NotFoundException(
+                            'Alguna de las dos secciones no existe',
+                        )
+                    return {
+                        section: data[0],
+                        nextSection: data[1],
+                    }
+                })
+                .then(async (sections) => {
+                    const courses = await Promise.all([
+                        this.getCourseByID(sections.section.course.toString()),
+                        this.getCourseByID(
+                            sections.nextSection.course.toString(),
+                        ),
+                    ]).then((data) => {
+                        return {
+                            course: data[0],
+                            nextCourse: data[1],
+                        }
+                    })
+                    if (courses.course.level >= courses.nextCourse.level)
+                        throw new BadRequestException(
+                            'La primera sección debe tener un nivel menor a la siguiente',
+                        )
+                    return {
+                        section: {
+                            course: courses.course,
+                            section: sections.section,
+                        },
+                        nextSection: {
+                            course: courses.nextCourse,
+                            section: sections.nextSection,
+                        },
+                    }
+                })
+            await this.sectionModel
+                .findByIdAndUpdate(
+                    idSection,
+                    {
+                        $set: {
+                            next_section: idNextSection,
+                            is_next_section_variable: false,
+                        },
+                    },
+                    { new: true },
+                )
+                .exec()
+            message = `Se actualiza la "siguiente sección" de la sección
+                ${section.course.course} -
+                ${section.section.section} a
+                ${nextSection.course.course}
+                ${nextSection.section.section}`
+        } else {
+            const section = await this.getSectionById(idSection)
+            if (!section)
+                throw new NotFoundException('No existe la sección a actualizar')
+            const course = await this.getCourseByID(section.course.toString())
+            await this.sectionModel
+                .findByIdAndUpdate(
+                    idSection,
+                    {
+                        $set: {
+                            is_next_section_variable: true,
+                        },
+                        $unset: {
+                            next_section: '',
+                        },
+                    },
+                    { new: true },
+                )
+                .exec()
+            message = `Se actualiza la "siguiente sección" de la sección
+                ${course.course} -
+                ${section.section} a tipo variable`
+        }
+        this.historyService.insertChange(
+            message,
+            Collections.COURSE,
+            idUser,
+            'update',
+        )
     }
 
     async deleteSection(idSection: string, idUser: string) {

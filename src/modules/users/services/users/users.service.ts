@@ -9,6 +9,8 @@ import { User } from '../../entities/user.entity'
 import { Role } from 'src/auth/models/roles.model'
 import { StudentsService } from 'src/modules/students/service/students.service'
 import { TeachersService } from 'src/modules/teachers/service/teachers.service'
+import { HistoryService } from 'src/modules/history/service/history.service'
+import { ObjectId } from 'mongodb'
 
 @Injectable()
 export class UsersService {
@@ -18,6 +20,7 @@ export class UsersService {
         private studentsService: StudentsService,
         @Inject(forwardRef(() => TeachersService))
         private teachersService: TeachersService,
+        private readonly historyService: HistoryService,
     ) {}
 
     private async generatePassword(password: string) {
@@ -138,12 +141,32 @@ export class UsersService {
         }
     }
 
+    async getUsersFromIds(IDs: Array<string>) {
+        return await this.userModel
+            .find(
+                {
+                    _id: {
+                        $in: IDs.map((ID) => {
+                            return new ObjectId(ID)
+                        }),
+                    },
+                },
+                { password: 0 },
+            )
+            .exec()
+    }
+
     async getUserID(user_id: string) {
         return await this.userModel.findById(user_id).exec()
     }
 
     async getUserRUT(rut: string) {
         return await this.userModel.findOne({ rut }).exec()
+    }
+
+    async getPersonsHistory() {
+        const persons = await this.historyService.getPersons()
+        return await this.getUsersFromIds(persons)
     }
 
     async createUser(user: UserDTO) {

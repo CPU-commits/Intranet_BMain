@@ -7,6 +7,7 @@ import {
     Param,
     Post,
     Put,
+    Query,
     Req,
     Res,
     UploadedFile,
@@ -151,6 +152,19 @@ export class CourseController {
     }
 
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_variable_sections')
+    async getVariableSections(@Res() res: Response) {
+        try {
+            const sections = await this.courseService.getVariableSections()
+            handleRes(res, {
+                sections,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Get('/get_sections_course/:id')
     async getSectionsCourse(
         @Res() res: Response,
@@ -163,6 +177,22 @@ export class CourseController {
             handleRes(res, {
                 sections,
             })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_sections_next_level/:idCourse')
+    async getSectionsNextLevel(
+        @Res() res: Response,
+        @Param('idCourse', MongoIdPipe) idCourse: string,
+    ) {
+        try {
+            const sections = await this.courseService.getSectionsNextLevel(
+                idCourse,
+            )
+            handleRes(res, sections)
         } catch (err) {
             handleError(err, res)
         }
@@ -250,6 +280,27 @@ export class CourseController {
                 user._id,
             )
             handleRes(res, image)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Put('/select_next_section/:idSection')
+    async selectNextSection(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('idSection', MongoIdPipe) idSection: string,
+        @Query('idNextSection') idNextSection?: string,
+    ) {
+        try {
+            const user = req.user as PayloadToken
+            await this.courseService.selectNextSection(
+                idSection,
+                user._id,
+                idNextSection,
+            )
+            handleRes(res)
         } catch (err) {
             handleError(err, res)
         }

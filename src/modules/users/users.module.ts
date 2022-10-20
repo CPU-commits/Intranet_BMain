@@ -7,6 +7,7 @@ import { User, UserSchema } from './entities/user.entity'
 import { UsersController } from './controller/users.controller'
 import { StudentsModule } from '../students/students.module'
 import { TeachersModule } from '../teachers/teachers.module'
+import { HistoryModule } from '../history/history.module'
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import { TeachersModule } from '../teachers/teachers.module'
                 schema: UserSchema,
             },
         ]),
+        HistoryModule,
         forwardRef(() => StudentsModule),
         forwardRef(() => TeachersModule),
     ],

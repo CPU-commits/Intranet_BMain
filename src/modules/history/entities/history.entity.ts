@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Types } from 'mongoose'
+import { Semester } from 'src/modules/semesters/entities/semester.entity'
 
 import { User } from 'src/modules/users/entities/user.entity'
 import { Collections } from '../models/collections.model'
@@ -35,12 +36,19 @@ export class History {
             TypeChange.UPDATE,
             TypeChange.DISMISS,
             TypeChange.REINTEGRATE,
+            TypeChange.CLOSE,
         ],
     })
     type_change: string
 
     @Prop({ type: String, required: false, maxlength: 535 })
     why: string
+
+    @Prop({ type: Types.ObjectId, ref: Semester.name })
+    semester?: Types.ObjectId | Semester
+
+    @Prop({ type: Date, required: true })
+    date: Date
 }
 
 export const HistorySchema = SchemaFactory.createForClass(History)

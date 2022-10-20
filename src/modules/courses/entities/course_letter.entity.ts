@@ -18,6 +18,12 @@ export class CourseLetter {
     @Prop({ required: true, type: Types.ObjectId, ref: 'Course' })
     course: Types.ObjectId | Course
 
+    @Prop({ type: Types.ObjectId, ref: CourseLetter.name })
+    next_section: Types.ObjectId | CourseLetter
+
+    @Prop({ default: false })
+    is_next_section_variable: boolean
+
     @Prop({ default: true })
     status: boolean
 }

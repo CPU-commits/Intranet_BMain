@@ -10,6 +10,9 @@ export class Subject {
 
     @Prop({ type: Types.ObjectId, ref: Specialty.name })
     specialty: Types.ObjectId | Specialty
+
+    @Prop({ default: true })
+    status: boolean
 }
 
 export const SubjectSchema = SchemaFactory.createForClass(Subject)

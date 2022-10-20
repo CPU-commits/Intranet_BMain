@@ -58,7 +58,7 @@ export class LibraryService {
             )
         const updatedLibrarian = await this.usersService.updateUser(
             librarian,
-            idUser,
+            idLibrarian,
         )
         this.historyService.insertChange(
             `Se actualiza el bibliotecario con RUT ${librarian.rut}`,

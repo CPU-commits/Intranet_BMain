@@ -1,9 +1,18 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common'
+import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    Post,
+    Res,
+    UseGuards,
+} from '@nestjs/common'
 import { Response } from 'express'
 import { Roles } from 'src/auth/decorators/roles.decorator'
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard'
 import { RolesGuard } from 'src/auth/guards/roles.guard'
 import { Role } from 'src/auth/models/roles.model'
+import { MongoIdPipe } from 'src/common/mongo-id.pipe'
 import handleError from 'src/res/handleError'
 import handleRes from 'src/res/handleRes'
 import { GradeConfigDTO } from '../dtos/grade_config.dto'
@@ -20,6 +29,43 @@ export class ClassroomController {
         try {
             const modules =
                 await this.classroomService.getModulesCurrentSemester()
+            handleRes(res, {
+                modules,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_modules_semester/:idSemester')
+    async getModulesSemester(
+        @Res() res: Response,
+        @Param('idSemester', MongoIdPipe) idSemester: string,
+    ) {
+        try {
+            const modules = await this.classroomService.getModulesSemester(
+                idSemester,
+            )
+            handleRes(res, {
+                modules,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_populated_modules_semester/:idSemester')
+    async getPopulatedModulesSemester(
+        @Res() res: Response,
+        @Param('idSemester', MongoIdPipe) idSemester: string,
+    ) {
+        try {
+            const modules =
+                await this.classroomService.getPopulatedModulesSemester(
+                    idSemester,
+                )
             handleRes(res, {
                 modules,
             })

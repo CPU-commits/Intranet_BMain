@@ -4,7 +4,6 @@ import {
     Get,
     Param,
     ParseBoolPipe,
-    ParseIntPipe,
     Post,
     Put,
     Query,
@@ -34,8 +33,8 @@ export class DirectiveController {
     @Get('/get_directives')
     async getDirectives(
         @Res() res: Response,
-        @Query('skip', ParseIntPipe) skip?: number,
-        @Query('limit', ParseIntPipe) limit?: number,
+        @Query('skip') skip?: number,
+        @Query('limit') limit?: number,
         @Query('search') search?: string,
         @Query('total', ParseBoolPipe) getTotal?: boolean,
     ) {

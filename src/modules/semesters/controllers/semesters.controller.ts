@@ -3,6 +3,7 @@ import {
     Controller,
     Get,
     Param,
+    ParseIntPipe,
     Post,
     Put,
     Req,
@@ -10,6 +11,7 @@ import {
     UseGuards,
 } from '@nestjs/common'
 import { Request, Response } from 'express'
+import { ObjectId } from 'mongodb'
 import { Roles } from 'src/auth/decorators/roles.decorator'
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard'
 import { RolesGuard } from 'src/auth/guards/roles.guard'
@@ -18,6 +20,7 @@ import { PayloadToken } from 'src/auth/models/token.model'
 import { MongoIdPipe } from 'src/common/mongo-id.pipe'
 import handleError from 'src/res/handleError'
 import handleRes from 'src/res/handleRes'
+import { FinishSemesterDTO } from '../dtos/finish_semester.dto,'
 import { SemesterDTO, SemesterUpdateDTO } from '../dtos/semester.dto'
 import { SemestersService } from '../service/semesters.service'
 
@@ -32,6 +35,95 @@ export class SemestersController {
             const semesters = await this.semestersService.getSemesters()
             handleRes(res, {
                 semesters,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Get('/get_current_semester')
+    async getCurrentSemester(@Res() res: Response) {
+        try {
+            const semester = await this.semestersService.getCurrentSemester()
+            handleRes(res, {
+                semester,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Get('/get_years')
+    async getYears(@Res() res: Response) {
+        try {
+            const years = await this.semestersService.getYears()
+            handleRes(res, {
+                years,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_finish_semester')
+    async getFinishSemester(@Res() res: Response) {
+        try {
+            const finishSemester =
+                await this.semestersService.getFinishSemester()
+            handleRes(res, {
+                finish_semester: finishSemester,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_semester_year/:year')
+    async getSemesterYear(
+        @Res() res: Response,
+        @Param('year', ParseIntPipe) year: number,
+    ) {
+        try {
+            const semesters = await this.semestersService.getSemestersFromYear(
+                year,
+            )
+            handleRes(res, {
+                semesters,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.STUDENT, Role.STUDENT_DIRECTIVE)
+    @Get('/get_participated_semesters')
+    async getParticipatedSemesters(@Res() res: Response, @Req() req: Request) {
+        try {
+            const user = req.user as PayloadToken
+            const semesters =
+                await this.semestersService.getParticipatedSemesters(user._id)
+            handleRes(res, {
+                semesters,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Get('/get_repeating_students/:idSemester')
+    async getRepeatingStudents(
+        @Res() res: Response,
+        @Param('idSemester', MongoIdPipe) idSemester: string,
+    ) {
+        try {
+            const students = await this.semestersService.getRepeatingStudents(
+                new ObjectId(idSemester),
+            )
+            handleRes(res, {
+                students,
             })
         } catch (err) {
             handleError(err, res)
@@ -93,6 +185,38 @@ export class SemestersController {
             handleRes(res, {
                 semester: semesterUpdated,
             })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Put('/finish_semester')
+    async finishSemester(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Body() finishSemesterData: FinishSemesterDTO,
+    ) {
+        try {
+            const user = req.user as PayloadToken
+            await this.semestersService.finishSemester(
+                user._id,
+                finishSemesterData.students_repeat,
+                finishSemesterData.students_next_courses,
+            )
+            handleRes(res)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Put('/interrupt_finish_semester')
+    async interrumptFinishSemester(@Res() res: Response, @Req() req: Request) {
+        try {
+            const user = req.user as PayloadToken
+            await this.semestersService.interruptFinishSemester(user._id)
+            handleRes(res)
         } catch (err) {
             handleError(err, res)
         }

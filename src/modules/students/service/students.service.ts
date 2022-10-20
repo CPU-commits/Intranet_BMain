@@ -22,7 +22,7 @@ import { Voting as VotingClass } from '../entities/voting.entity'
 import { SemestersService } from 'src/modules/semesters/service/semesters.service'
 import { ObjectId } from 'mongodb'
 import { ClientProxy } from '@nestjs/microservices'
-import moment from 'moment'
+import * as moment from 'moment'
 import { Vote } from '../entities/vote.entity'
 import { NotifyGlobal, NotifyGlobalChannel } from 'src/models/notify.model'
 
@@ -125,6 +125,23 @@ export class StudentsService {
             })
     }
 
+    async getStudentsFromIdsUser(idUsers: Array<string>) {
+        return await this.studentModel
+            .find({
+                user: {
+                    $in: idUsers,
+                },
+            })
+            .populate('user', {
+                name: 1,
+                first_lastname: 1,
+                second_lastname: 1,
+                rut: 1,
+            })
+            .sort({ name: 1, first_lastname: 1, second_lastname: 1 })
+            .exec()
+    }
+
     async getStudentsFromIdCourse(idCourse: string) {
         return await this.studentModel
             .find({
@@ -146,7 +163,7 @@ export class StudentsService {
                 key: VotingKey,
             })
             .exec()) as Voting
-        if (!statusVoting) return VotingEnumValues.CLOSED
+        if (!statusVoting) return VotingEnumValues.OPENED
         return statusVoting.value
     }
 
@@ -276,7 +293,7 @@ export class StudentsService {
     }
 
     async uploadVoting(voting: VotingDTO, idUser: string) {
-        if (moment(new Date()).isAfter(moment(voting.start_date)))
+        if (moment().isAfter(moment(voting.start_date)))
             throw new BadRequestException(
                 'La fecha de comienzo debe ser mayor a la actual',
             )

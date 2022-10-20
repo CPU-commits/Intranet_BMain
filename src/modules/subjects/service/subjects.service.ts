@@ -24,11 +24,11 @@ export class SubjectsService {
     ) {}
 
     async getSubjectCustom(query = null, filter = null) {
-        return await this.subjectModel.findOne(query, filter).exec()
+        return await this.subjectModel.findOne({ status: true, ...query }, filter).exec()
     }
 
     async getSubjects() {
-        return await this.subjectModel.find().populate('specialty').exec()
+        return await this.subjectModel.find({ status: true }).populate('specialty').exec()
     }
 
     async getSpecialtyByID(idSpecialty: string) {
@@ -63,8 +63,16 @@ export class SubjectsService {
         })
         if (isUsed)
             throw new ConflictException('La materia está en uso en un anclaje')
-        const deletedSubject = await this.subjectModel.findByIdAndDelete(
+        const deletedSubject = await this.subjectModel.findByIdAndUpdate(
             idSubject,
+            {
+                $set: {
+                    status: false,
+                },
+            },
+            {
+                new: true,
+            },
         )
         this.historyService.insertChange(
             `Se ha eliminado la materia ${subject.subject}`,
@@ -140,6 +148,41 @@ export class SubjectsService {
             `Se ha añadido la materia ${exists.subject.subject} al curso ${exists.course.course}`,
             Collections.COURSE,
             userId,
+            'add',
+        )
+        return exists.subject
+    }
+
+    async deleteSubjectCourse(idSubject: string, idCourse: string, idUser: string) {
+        const exists = await Promise.all([
+            this.courseService.getCourseCustom({
+                _id: idCourse,
+            }),
+            this.getSubjectCustom({
+                _id: idSubject,
+            }),
+        ]).then(async (data) => {
+            return {
+                subject: data[1],
+                course: data[0],
+            }
+        })
+        if (!exists.subject || !exists.course)
+            throw new ConflictException('No existe el curso o la materia')
+        await exists.course
+            .updateOne(
+                {
+                    $pull: {
+                        subjects: idSubject,
+                    },
+                },
+                { new: true },
+            )
+            .exec()
+        this.historyService.insertChange(
+            `Se ha eliminado la materia ${exists.subject.subject} del curso ${exists.course.course}`,
+            Collections.COURSE,
+            idUser,
             'add',
         )
         return exists.subject

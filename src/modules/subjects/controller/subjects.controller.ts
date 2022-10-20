@@ -150,4 +150,25 @@ export class SubjectsController {
             handleError(err, res)
         }
     }
+
+    @Roles(Role.DIRECTIVE, Role.DIRECTOR)
+    @Delete('/delete_subject_course/:idSubject/:idCourse')
+    async deleteSubjectCourse(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('idSubject', MongoIdPipe) idSubject: string,
+        @Param('idCourse', MongoIdPipe) idCourse: string,
+    ) {
+        try {
+            const user: PayloadToken = req.user
+            await this.subjectService.deleteSubjectCourse(
+                idSubject,
+                idCourse,
+                user._id,
+            )
+            handleRes(res)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
 }

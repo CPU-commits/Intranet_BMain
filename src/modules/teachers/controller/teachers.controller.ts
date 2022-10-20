@@ -1,10 +1,9 @@
 import {
     Body,
     Controller,
+    Delete,
     Get,
     Param,
-    ParseBoolPipe,
-    ParseIntPipe,
     Post,
     Put,
     Query,
@@ -35,10 +34,10 @@ export class TeachersController {
     @Get('/get_teachers')
     async getTeachers(
         @Res() res: Response,
-        @Query('skip', ParseIntPipe) skip?: number,
+        @Query('skip') skip?: number,
         @Query('limit') limit?: number,
         @Query('search') search?: string,
-        @Query('total', ParseBoolPipe) getTotal?: boolean,
+        @Query('total') getTotal?: boolean,
     ) {
         try {
             const directives = await this.teachersService.getTeachers(
@@ -148,6 +147,27 @@ export class TeachersController {
                 user._id,
             )
             handleRes(res, teacherData)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTOR, Role.DIRECTIVE)
+    @Delete('/delete_subject_course/:idTeacher/:idImparted')
+    async deleteSubjectCourse(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('idTeacher', MongoIdPipe) idTeacher: string,
+        @Param('idImparted', MongoIdPipe) idImparted: string,
+    ) {
+        try {
+            const user: PayloadToken = req.user
+            await this.teachersService.deleteSubjectCourse(
+                idTeacher,
+                idImparted,
+                user._id,
+            )
+            handleRes(res)
         } catch (err) {
             handleError(err, res)
         }

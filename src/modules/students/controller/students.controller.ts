@@ -18,6 +18,8 @@ import { Role } from 'src/auth/models/roles.model'
 import { PayloadToken } from 'src/auth/models/token.model'
 import { MongoIdPipe } from 'src/common/mongo-id.pipe'
 import { WhyDTO } from 'src/modules/directive/dtos/Directive.dto'
+import { User } from 'src/modules/users/entities/user.entity'
+import { Types } from 'mongoose'
 import handleError from 'src/res/handleError'
 import handleRes from 'src/res/handleRes'
 import { StudentDTO, UpdateStudentDTO } from '../dtos/student.dto'
@@ -47,6 +49,32 @@ export class StudentsController {
                 getTotal,
                 actived,
             )
+            handleRes(res, students)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Roles(Role.DIRECTOR, Role.DIRECTIVE, Role.TEACHER)
+    @Get('/get_students_course/:idCourse')
+    async getStudentsCourse(
+        @Res() res: Response,
+        @Param('idCourse', MongoIdPipe) idCourse: string,
+    ) {
+        try {
+            const students = (
+                await this.studentsService.getStudentsFromIdCourse(idCourse)
+            ).map((student) => {
+                const { _id, first_lastname, name, rut, second_lastname } =
+                    student.user as User & { _id: Types.ObjectId }
+                return {
+                    _id,
+                    first_lastname,
+                    name,
+                    rut,
+                    second_lastname,
+                }
+            })
             handleRes(res, students)
         } catch (err) {
             handleError(err, res)

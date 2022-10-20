@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
+import { ObjectId } from 'mongodb'
 import { Model } from 'mongoose'
 import { KeyValue } from 'src/modules/college/entities/key_value.entity'
 import { SemestersService } from 'src/modules/semesters/service/semesters.service'
@@ -7,6 +8,7 @@ import { StudentsService } from 'src/modules/students/service/students.service'
 import { GradeConfigDTO } from '../dtos/grade_config.dto'
 
 import { ModuleClass } from '../entities/module.entity'
+import { ModuleHistory } from '../entities/module_history.entity'
 import { GradeConfigKeys } from '../models/grade_config.model'
 
 @Injectable()
@@ -15,6 +17,8 @@ export class ClassroomService {
         @InjectModel(ModuleClass.name) private moduleModel: Model<ModuleClass>,
         @InjectModel(KeyValue.name)
         private readonly keyValueModel: Model<KeyValue>,
+        @InjectModel(ModuleHistory.name)
+        private readonly moduleHistoryModel: Model<ModuleHistory>,
         private readonly studentsService: StudentsService,
         private readonly semestersService: SemestersService,
     ) {}
@@ -26,8 +30,10 @@ export class ClassroomService {
     async getModulesFromSection(idSection: string) {
         return await this.moduleModel
             .find({
-                section: idSection,
-                status: true,
+                $and: [
+                    { section: idSection },
+                    { status: true },
+                ]
             })
             .exec()
     }
@@ -40,8 +46,29 @@ export class ClassroomService {
             .exec()
     }
 
+    async getPopulatedModulesSemester(idSemester: string) {
+        return await this.moduleModel
+            .find(
+                {
+                    semester: idSemester,
+                },
+                { sub_sections: 0, semester: 0 },
+            )
+            .populate({
+                path: 'section',
+                select: 'section course',
+                populate: {
+                    path: 'course',
+                    select: 'course',
+                },
+            })
+            .populate('subject')
+            .exec()
+    }
+
     async getModulesCurrentSemester() {
         const semester = await this.semestersService.getCurrentSemester()
+        if (!semester) return []
         return await this.moduleModel
             .find(
                 {
@@ -62,10 +89,20 @@ export class ClassroomService {
     }
 
     async getStudentsFromIdModule(idModule: string) {
+        const idStudents = await this.moduleHistoryModel.findOne({
+            module: new ObjectId(idModule),
+        })
+        if (idStudents) {
+            const students = await this.studentsService.getStudentsFromIdsUser(idStudents.students.map((idStudent) => {
+                return idStudent.toString()
+            }))
+            return students
+        }
         const module = await this.getModuleFromId(idModule)
-        return await this.studentsService.getStudentsFromIdCourse(
+        const students = await this.studentsService.getStudentsFromIdCourse(
             module.section.toString(),
         )
+        return students
     }
 
     async getStudentsByIdCourse(idCourse: string) {

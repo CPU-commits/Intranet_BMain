@@ -4,6 +4,7 @@ export enum TypeChange {
     DELETE = 'delete',
     DISMISS = 'dismiss',
     REINTEGRATE = 'reintegrate',
+    CLOSE = 'close',
 }
 
 export enum TypeChangeKey {
@@ -12,4 +13,5 @@ export enum TypeChangeKey {
     'delete',
     'dismiss',
     'reintegrate',
+    'close',
 }
