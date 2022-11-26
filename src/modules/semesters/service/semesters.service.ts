@@ -132,11 +132,13 @@ export class SemestersService {
                     },
                 ])
                 .exec()
-        ).map((semester) => {
-            return {
-                year: semester._id as number,
-            }
-        }).sort((a, b) => a.year - b.year)
+        )
+            .map((semester) => {
+                return {
+                    year: semester._id as number,
+                }
+            })
+            .sort((a, b) => a.year - b.year)
     }
 
     async getFinishSemester() {

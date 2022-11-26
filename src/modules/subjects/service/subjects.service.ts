@@ -24,11 +24,16 @@ export class SubjectsService {
     ) {}
 
     async getSubjectCustom(query = null, filter = null) {
-        return await this.subjectModel.findOne({ status: true, ...query }, filter).exec()
+        return await this.subjectModel
+            .findOne({ status: true, ...query }, filter)
+            .exec()
     }
 
     async getSubjects() {
-        return await this.subjectModel.find({ status: true }).populate('specialty').exec()
+        return await this.subjectModel
+            .find({ status: true })
+            .populate('specialty')
+            .exec()
     }
 
     async getSpecialtyByID(idSpecialty: string) {
@@ -153,7 +158,11 @@ export class SubjectsService {
         return exists.subject
     }
 
-    async deleteSubjectCourse(idSubject: string, idCourse: string, idUser: string) {
+    async deleteSubjectCourse(
+        idSubject: string,
+        idCourse: string,
+        idUser: string,
+    ) {
         const exists = await Promise.all([
             this.courseService.getCourseCustom({
                 _id: idCourse,

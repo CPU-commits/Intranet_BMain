@@ -30,10 +30,7 @@ export class ClassroomService {
     async getModulesFromSection(idSection: string) {
         return await this.moduleModel
             .find({
-                $and: [
-                    { section: idSection },
-                    { status: true },
-                ]
+                $and: [{ section: idSection }, { status: true }],
             })
             .exec()
     }
@@ -93,9 +90,11 @@ export class ClassroomService {
             module: new ObjectId(idModule),
         })
         if (idStudents) {
-            const students = await this.studentsService.getStudentsFromIdsUser(idStudents.students.map((idStudent) => {
-                return idStudent.toString()
-            }))
+            const students = await this.studentsService.getStudentsFromIdsUser(
+                idStudents.students.map((idStudent) => {
+                    return idStudent.toString()
+                }),
+            )
             return students
         }
         const module = await this.getModuleFromId(idModule)

@@ -1,18 +1,18 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { DirectiveService } from './directive.service';
+import { Test, TestingModule } from '@nestjs/testing'
+import { DirectiveService } from './directive.service'
 
 describe('DirectiveService', () => {
-  let service: DirectiveService;
+    let service: DirectiveService
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [DirectiveService],
-    }).compile();
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [DirectiveService],
+        }).compile()
 
-    service = module.get<DirectiveService>(DirectiveService);
-  });
+        service = module.get<DirectiveService>(DirectiveService)
+    })
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-});
+    it('should be defined', () => {
+        expect(service).toBeDefined()
+    })
+})

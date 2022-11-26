@@ -246,7 +246,11 @@ export class TeachersService {
         return teacherUpdated
     }
 
-    async deleteSubjectCourse(idTeacher: string, idImparted: string, idUser: string) {
+    async deleteSubjectCourse(
+        idTeacher: string,
+        idImparted: string,
+        idUser: string,
+    ) {
         const teacher = await this.getTeacherByID(idTeacher)
         if (!teacher) throw new NotFoundException('No existe el profesor')
         const teacherUpdated = await this.teacherModel.findByIdAndUpdate(
@@ -263,7 +267,9 @@ export class TeachersService {
             },
         )
         this.historyService.insertChange(
-            `Se elimina una materia y curso al profesor con RUT ${(teacher.user as User).rut}`,
+            `Se elimina una materia y curso al profesor con RUT ${
+                (teacher.user as User).rut
+            }`,
             Collections.USER,
             idUser,
             'update',

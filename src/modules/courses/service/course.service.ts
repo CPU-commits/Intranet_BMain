@@ -69,10 +69,7 @@ export class CourseService {
 
     async getSectionCustom(queryAdd?: any, filter = null) {
         const query = {
-            $and: [
-                { status: true },
-                queryAdd,
-            ],
+            $and: [{ status: true }, queryAdd],
         }
         return await this.courseModel.findOne(query, filter).exec()
     }
