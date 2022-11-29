@@ -8,9 +8,6 @@ enum NodeEnv {
 export default registerAs('config', () => {
     const nodeEnv = process.env.NODE_ENV as keyof typeof NodeEnv
     return {
-        client: {
-            url: process.env.CLIENT_URI,
-        },
         mongo: {
             dbName: process.env.MONGO_DB,
             host: process.env.MONGO_HOST,

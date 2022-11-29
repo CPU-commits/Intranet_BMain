@@ -45,7 +45,6 @@ import { APP_GUARD } from '@nestjs/core'
                 MONGO_HOST: Joi.string().required(),
                 MONGO_CONNECTION: Joi.string().required(),
                 NODE_ENV: Joi.string().required(),
-                CLIENT_URI: Joi.string().required(),
                 NATS_HOST: Joi.string().required(),
                 AWS_BUCKET: Joi.string().required(),
                 AWS_ACCESS_KEY_ID: Joi.string().required(),
