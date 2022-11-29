@@ -109,14 +109,14 @@ export class ClassroomService {
     }
 
     async getGradeConfig() {
-        const gradeConfig: any = {}
+        const gradeConfig = new Map()
         const gradeConfigData = await Promise.all([
             this.keyValueModel.findOne({ key: GradeConfigKeys.MIN }).exec(),
             this.keyValueModel.findOne({ key: GradeConfigKeys.MAX }).exec(),
         ])
         if (!gradeConfigData[0]) return gradeConfig
-        gradeConfig[GradeConfigKeys.MIN] = gradeConfigData[0].value
-        gradeConfig[GradeConfigKeys.MAX] = gradeConfigData[1].value
+        gradeConfig.set(GradeConfigKeys.MIN, gradeConfigData[0].value)
+        gradeConfig.set(GradeConfigKeys.MAX, gradeConfigData[1].value)
         return gradeConfig
     }
 

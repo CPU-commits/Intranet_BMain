@@ -18,7 +18,7 @@ import { UpdateUserDTO, UserDTO } from 'src/modules/users/dtos/user.dto'
 import { User } from 'src/modules/users/entities/user.entity'
 import { UsersService } from 'src/modules/users/services/users/users.service'
 import { SubjectCourseDTO } from '../dtos/subject_course.dto'
-import { Imparted, Teacher } from '../entities/teacher.entity'
+import { Teacher } from '../entities/teacher.entity'
 
 @Injectable()
 export class TeachersService {

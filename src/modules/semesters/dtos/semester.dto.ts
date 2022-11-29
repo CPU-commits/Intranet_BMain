@@ -1,11 +1,17 @@
 import { IsNotEmpty, IsNumber } from 'class-validator'
-import { PartialType } from '@nestjs/mapped-types'
+import { ApiProperty, PartialType } from '@nestjs/swagger'
 
 export class SemesterDTO {
+    @ApiProperty({
+        example: 2002,
+    })
     @IsNumber()
     @IsNotEmpty()
     year: number
 
+    @ApiProperty({
+        example: 2,
+    })
     @IsNumber()
     @IsNotEmpty()
     semester: number

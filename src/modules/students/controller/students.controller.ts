@@ -25,12 +25,72 @@ import handleRes from 'src/res/handleRes'
 import { StudentDTO, UpdateStudentDTO } from '../dtos/student.dto'
 import { UpdateVotingDTO, VotingDTO } from '../dtos/voting.dto'
 import { StudentsService } from '../service/students.service'
+import {
+    ApiBody,
+    ApiExtraModels,
+    ApiOkResponse,
+    ApiOperation,
+    ApiQuery,
+    ApiServiceUnavailableResponse,
+    ApiTags,
+    getSchemaPath,
+} from '@nestjs/swagger'
+import { ResApi } from 'src/models/res.model'
+import { StudentsRes } from '../res/students.res'
+import { VotingStatusRes } from '../res/voting_status.res'
+import { VotingRes } from '../res/voting.res'
+import { VoteRes } from '../res/vote.res'
+import { StudentRes } from '../res/student.res'
 
+@ApiTags('Main', 'Student')
+@ApiServiceUnavailableResponse({
+    description: 'MongoDB || Nats service unavailable',
+})
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('api/students')
 export class StudentsController {
     constructor(private studentsService: StudentsService) {}
 
+    @ApiExtraModels(StudentsRes)
+    @ApiOperation({
+        description: 'Get students',
+        summary: 'Get students',
+    })
+    @ApiQuery({
+        name: 'skip',
+        required: false,
+    })
+    @ApiQuery({
+        name: 'limit',
+        required: false,
+    })
+    @ApiQuery({
+        name: 'search',
+        required: false,
+    })
+    @ApiQuery({
+        name: 'total',
+        required: false,
+    })
+    @ApiQuery({
+        name: 'actived',
+        required: false,
+    })
+    @ApiTags('roles.director', 'roles.directive', 'roles.teacher')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(StudentsRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Roles(Role.DIRECTOR, Role.DIRECTIVE, Role.TEACHER)
     @Get('/get_students')
     async getStudents(
@@ -55,6 +115,28 @@ export class StudentsController {
         }
     }
 
+    @ApiOperation({
+        summary: 'Get students course',
+        description: 'Get students by course',
+    })
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            type: 'array',
+                            items: {
+                                $ref: getSchemaPath(User),
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    })
+    @ApiTags('roles.director', 'roles.directive', 'roles.teacher')
     @Roles(Role.DIRECTOR, Role.DIRECTIVE, Role.TEACHER)
     @Get('/get_students_course/:idCourse')
     async getStudentsCourse(
@@ -81,6 +163,28 @@ export class StudentsController {
         }
     }
 
+    @ApiExtraModels(VotingStatusRes)
+    @ApiOperation({
+        description: 'Get voting status',
+        summary: 'Get voting status',
+    })
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            type: 'array',
+                            items: {
+                                $ref: getSchemaPath(VotingStatusRes),
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Get('/get_voting_status')
     async getVotingStatus(@Res() res: Response) {
         try {
@@ -93,6 +197,25 @@ export class StudentsController {
         }
     }
 
+    @ApiExtraModels(VotingRes)
+    @ApiOperation({
+        description: 'Get voting',
+        summary: 'Get voting',
+    })
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(VotingRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Get('/get_voting')
     async getVoting(@Res() res: Response) {
         try {
@@ -105,11 +228,31 @@ export class StudentsController {
         }
     }
 
+    @ApiExtraModels(VoteRes)
+    @ApiOperation({
+        description: 'Get my vote',
+        summary: 'Get my vote',
+    })
+    @ApiTags('roles.student', 'roles.student_directive')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(VoteRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Roles(Role.STUDENT, Role.STUDENT_DIRECTIVE)
     @Get('/get_my_vote')
     async getMyVote(@Res() res: Response, @Req() req: Request) {
         try {
-            const user = req.user
+            const user = req.user as PayloadToken
             const myVote = await this.studentsService.getMyVote(user._id)
             handleRes(res, {
                 my_vote: myVote,
@@ -119,6 +262,26 @@ export class StudentsController {
         }
     }
 
+    @ApiExtraModels(StudentRes)
+    @ApiOperation({
+        description: 'New student',
+        summary: 'New student',
+    })
+    @ApiTags('roles.director', 'roles.directive')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(StudentRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
     @Post('/new_student')
     async newStudent(
@@ -127,7 +290,7 @@ export class StudentsController {
         @Body() student: StudentDTO,
     ) {
         try {
-            const user: PayloadToken = req.user
+            const user = req.user as PayloadToken
             const studentData = await this.studentsService.createStudent(
                 student,
                 user._id,
@@ -140,6 +303,19 @@ export class StudentsController {
         }
     }
 
+    @ApiTags('roles.director', 'roles.directive')
+    @ApiOperation({
+        description: 'New students',
+        summary: 'New students',
+    })
+    @ApiBody({
+        type: [StudentDTO],
+    })
+    @ApiOkResponse({
+        schema: {
+            $ref: getSchemaPath(ResApi),
+        },
+    })
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
     @Post('/new_students')
     async newStudents(
@@ -148,7 +324,7 @@ export class StudentsController {
         @Body() students: StudentDTO[],
     ) {
         try {
-            const user: PayloadToken = req.user
+            const user = req.user as PayloadToken
             await this.studentsService.createStudents(students, user._id)
             handleRes(res)
         } catch (err) {
@@ -156,16 +332,26 @@ export class StudentsController {
         }
     }
 
+    @ApiOperation({
+        summary: 'Change status student',
+        description: 'Change status student. 0 -> 1 || 1 -> 0',
+    })
+    @ApiTags('roles.director', 'roles.directive')
+    @ApiOkResponse({
+        schema: {
+            $ref: getSchemaPath(ResApi),
+        },
+    })
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
-    @Post('/change_status/:id')
+    @Post('/change_status/:idStudent')
     async changeStatus(
         @Res() res: Response,
         @Req() req: Request,
-        @Param('id', MongoIdPipe) idStudent: string,
+        @Param('idStudent', MongoIdPipe) idStudent: string,
         @Body() why: WhyDTO,
     ) {
         try {
-            const user: PayloadToken = req.user
+            const user = req.user as PayloadToken
             await this.studentsService.dismissStudent(
                 idStudent,
                 why.why,
@@ -177,6 +363,14 @@ export class StudentsController {
         }
     }
 
+    @ApiOperation({
+        description: 'Upload voting',
+        summary: 'Upload voting',
+    })
+    @ApiTags('roles.director', 'roles.directive')
+    @ApiOkResponse({
+        schema: { $ref: getSchemaPath(ResApi) },
+    })
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
     @Post('/upload_voting')
     async uploadVoting(
@@ -193,11 +387,19 @@ export class StudentsController {
         }
     }
 
+    @ApiOperation({
+        description: 'Vote for list',
+        summary: 'Vote',
+    })
+    @ApiTags('roles.student', 'roles.student_directive')
+    @ApiOkResponse({
+        schema: { $ref: getSchemaPath(ResApi) },
+    })
     @Roles(Role.STUDENT, Role.STUDENT_DIRECTIVE)
-    @Post('/vote/:id')
+    @Post('/vote/:idList')
     async vote(
         @Res() res: Response,
-        @Param('id', MongoIdPipe) idList: string,
+        @Param('idList', MongoIdPipe) idList: string,
         @Req() req: Request,
     ) {
         try {
@@ -209,16 +411,26 @@ export class StudentsController {
         }
     }
 
+    @ApiOperation({
+        summary: 'Edit student',
+        description: 'Edit student',
+    })
+    @ApiTags('roles.director', 'roles.directive')
+    @ApiOkResponse({
+        schema: {
+            $ref: getSchemaPath(ResApi),
+        },
+    })
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
-    @Put('/edit_student/:id')
+    @Put('/edit_student/:idStudent')
     async editStudent(
         @Res() res: Response,
         @Req() req: Request,
         @Body() student: UpdateStudentDTO,
-        @Param('id', MongoIdPipe) idStudent: string,
+        @Param('idStudent', MongoIdPipe) idStudent: string,
     ) {
         try {
-            const user: PayloadToken = req.user
+            const user = req.user as PayloadToken
             await this.studentsService.updateStudent(
                 student,
                 idStudent,
@@ -230,6 +442,26 @@ export class StudentsController {
         }
     }
 
+    @ApiExtraModels(VotingRes)
+    @ApiOperation({
+        description: 'Edit voting',
+        summary: 'Edit voting',
+    })
+    @ApiTags('roles.director', 'roles.directive')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(VotingRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Roles(Role.DIRECTOR, Role.DIRECTIVE)
     @Put('/edit_voting')
     async editVoting(

@@ -48,7 +48,7 @@ export class BookLifeService {
         idAuthor: string,
     ) {
         const user = await this.usersService.getUserID(idStudent)
-        if (!user) throw new BadRequestException('No existe el alumno')
+        if (!user) throw new NotFoundException('No existe el alumno')
         if (
             user.user_type !== Role.STUDENT &&
             user.user_type !== Role.STUDENT_DIRECTIVE

@@ -1,12 +1,16 @@
-import { PartialType } from '@nestjs/mapped-types'
+import { ApiProperty, PartialType } from '@nestjs/swagger'
 import { IsBoolean, IsNotEmpty, IsString, MaxLength } from 'class-validator'
 
 export class ObservationDTO {
+    @ApiProperty({
+        maxLength: 500,
+    })
     @IsString()
     @MaxLength(500)
     @IsNotEmpty()
     observation: string
 
+    @ApiProperty()
     @IsBoolean()
     @IsNotEmpty()
     type: boolean

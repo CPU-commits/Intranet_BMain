@@ -14,6 +14,7 @@ import { UsersModule } from './modules/users/users.module'
 import { DatabaseModule } from './database/database.module'
 import { DirectiveModule } from './modules/directive/directive.module'
 import { HistoryModule } from './modules/history/history.module'
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 // Config
 import config from './config'
 import { AuthModule } from './auth/auth.module'
@@ -22,6 +23,7 @@ import { AwsModule } from './modules/aws/aws.module'
 import { BookLifeModule } from './modules/book_life/book_life.module'
 import { LibraryModule } from './modules/library/library.module'
 import { CollegeModule } from './modules/college/college.module'
+import { APP_GUARD } from '@nestjs/core'
 
 @Module({
     imports: [
@@ -44,11 +46,11 @@ import { CollegeModule } from './modules/college/college.module'
                 MONGO_CONNECTION: Joi.string().required(),
                 NODE_ENV: Joi.string().required(),
                 CLIENT_URI: Joi.string().required(),
-                PORT: Joi.number().required(),
                 NATS_HOST: Joi.string().required(),
                 AWS_BUCKET: Joi.string().required(),
                 AWS_ACCESS_KEY_ID: Joi.string().required(),
                 AWS_SECRET_ACCESS_KEY: Joi.string().required(),
+                CLIENT_URL: Joi.string().required(),
             }),
         }),
         UsersModule,
@@ -61,8 +63,18 @@ import { CollegeModule } from './modules/college/college.module'
         BookLifeModule,
         LibraryModule,
         CollegeModule,
+        ThrottlerModule.forRoot({
+            ttl: 1,
+            limit: 7,
+        }),
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [
+        AppService,
+        {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard,
+        },
+    ],
 })
 export class AppModule {}

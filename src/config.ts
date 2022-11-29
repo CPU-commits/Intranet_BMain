@@ -8,7 +8,6 @@ enum NodeEnv {
 export default registerAs('config', () => {
     const nodeEnv = process.env.NODE_ENV as keyof typeof NodeEnv
     return {
-        port: parseInt(process.env.PORT, 10),
         client: {
             url: process.env.CLIENT_URI,
         },
@@ -26,5 +25,6 @@ export default registerAs('config', () => {
             bucket: process.env.AWS_BUCKET,
         },
         nats: process.env.NATS_HOST,
+        client_url: process.env.CLIENT_URL,
     }
 })

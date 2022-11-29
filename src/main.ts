@@ -1,8 +1,37 @@
 import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { MicroserviceOptions, Transport } from '@nestjs/microservices'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import helmet from 'helmet'
+import * as csruf from 'csurf'
 import { AppModule } from './app.module'
 import config from './config'
+import { ResApi } from './models/res.model'
+import { Observation } from './modules/book_life/entities/observation.entity'
+import { User } from './modules/users/entities/user.entity'
+import { Semester } from './modules/semesters/entities/semester.entity'
+import { Directive } from './modules/classroom/entities/directive.entity'
+import { DirectivesStatus } from './modules/classroom/res/directives_status.res'
+import { File } from './modules/aws/entities/file.entity'
+import { Course } from './modules/courses/entities/course.entity'
+import { CourseLetter } from './modules/courses/entities/course_letter.entity'
+import { Imparted, Teacher } from './modules/teachers/entities/teacher.entity'
+import { Specialty } from './modules/subjects/entities/specialty.entity'
+import {
+    ModuleClass,
+    SubSection,
+} from './modules/classroom/entities/module.entity'
+import { Cycle } from './modules/courses/entities/cycle.entity'
+import { Subject } from './modules/subjects/entities/subject.entity'
+import { History } from './modules/history/entities/history.entity'
+import { FinishSemester } from './modules/semesters/res/finish_semester.res'
+import { CurrentSemesterStatus } from './modules/semesters/models/semester_status.model'
+import { RepeatingStudent } from './modules/semesters/entities/repeating_student.entity'
+import { VariableSectionStudentDTO } from './modules/semesters/dtos/finish_semester.dto,'
+import { Student } from './modules/students/entities/student.entity'
+import { List } from './modules/students/entities/voting.entity'
+import { Vote } from './modules/students/entities/vote.entity'
+import { ListDTO } from './modules/students/dtos/voting.dto'
 
 async function bootstrap() {
     // Config
@@ -27,9 +56,68 @@ async function bootstrap() {
         }),
     )
     app.enableCors({
-        origin: '*',
+        origin: configService.client_url,
         methods: ['GET', 'PUT', 'POST', 'DELETE'],
+        credentials: true,
     })
+    // Helmet
+    app.use(
+        helmet({
+            contentSecurityPolicy: false,
+        }),
+    )
+    // Swagger
+    const configDocs = new DocumentBuilder()
+        .setTitle('Main API')
+        .setVersion('1.0')
+        .setDescription('API Server For Main service')
+        .setTermsOfService('http://swagger.io/terms/')
+        .setContact(
+            'API Support',
+            'http://www.swagger.io/support',
+            'support@swagger.io',
+        )
+        .setLicense(
+            'Apache 2.0',
+            'http://www.apache.org/licenses/LICENSE-2.0.html',
+        )
+        .setBasePath('/api/l')
+        .addServer('http://localhost:3000')
+        .addTag('Main', 'Main Service')
+        .addBearerAuth()
+        .build()
+    const docuement = SwaggerModule.createDocument(app, configDocs, {
+        extraModels: [
+            ResApi,
+            Observation,
+            User,
+            Semester,
+            Directive,
+            DirectivesStatus,
+            File,
+            Course,
+            CourseLetter,
+            Teacher,
+            Specialty,
+            Subject,
+            SubSection,
+            ModuleClass,
+            Imparted,
+            Cycle,
+            History,
+            FinishSemester,
+            CurrentSemesterStatus,
+            RepeatingStudent,
+            VariableSectionStudentDTO,
+            Student,
+            List,
+            Vote,
+            ListDTO,
+        ],
+    })
+    SwaggerModule.setup('/api/docs', app, docuement)
+    // Csurf
+    app.use(csruf())
     await app.listen(3000)
 }
 bootstrap()

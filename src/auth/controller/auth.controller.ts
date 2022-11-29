@@ -4,6 +4,7 @@ import { AuthGuard } from '@nestjs/passport'
 
 import { AuthService } from '../services/auth.service'
 import handleError from 'src/res/handleError'
+import { User } from 'src/modules/users/entities/user.entity'
 
 @Controller('api/authentication')
 export class AuthController {
@@ -13,7 +14,7 @@ export class AuthController {
     @Post('/')
     login(@Req() req: Request, @Res() res: Response) {
         try {
-            const user = req.user
+            const user = req.user as User & { _id: string }
             const token = this.authService.generateJWT(user)
             res.json(token)
         } catch (err) {

@@ -10,6 +10,14 @@ import {
     Res,
     UseGuards,
 } from '@nestjs/common'
+import {
+    ApiExtraModels,
+    ApiOkResponse,
+    ApiOperation,
+    ApiServiceUnavailableResponse,
+    ApiTags,
+    getSchemaPath,
+} from '@nestjs/swagger'
 import { Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { Roles } from 'src/auth/decorators/roles.decorator'
@@ -18,17 +26,46 @@ import { RolesGuard } from 'src/auth/guards/roles.guard'
 import { Role } from 'src/auth/models/roles.model'
 import { PayloadToken } from 'src/auth/models/token.model'
 import { MongoIdPipe } from 'src/common/mongo-id.pipe'
+import { ResApi } from 'src/models/res.model'
 import handleError from 'src/res/handleError'
 import handleRes from 'src/res/handleRes'
 import { FinishSemesterDTO } from '../dtos/finish_semester.dto,'
 import { SemesterDTO, SemesterUpdateDTO } from '../dtos/semester.dto'
+import { FinishSemesterRes } from '../res/finish_semester.res'
+import { RepeatingStudentRes } from '../res/repeating_students.res'
+import { SemesterRes } from '../res/semester.res'
+import { SemestersRes } from '../res/semesters.res'
 import { SemestersService } from '../service/semesters.service'
 
+@ApiTags('Main', 'Semester')
+@ApiServiceUnavailableResponse({
+    description: 'MongoDB || Nats service unavailable',
+})
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('api/semesters')
 export class SemestersController {
     constructor(private semestersService: SemestersService) {}
 
+    @ApiExtraModels(SemestersRes)
+    @ApiOperation({
+        summary: 'Get semesters',
+        description: 'Get semesters',
+    })
+    @ApiTags('roles.all')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(SemestersRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Get('/get_semesters')
     async getSemesters(@Res() res: Response) {
         try {
@@ -41,6 +78,26 @@ export class SemestersController {
         }
     }
 
+    @ApiExtraModels(SemesterRes)
+    @ApiOperation({
+        summary: 'Get current semester',
+        description: 'Get current semester',
+    })
+    @ApiTags('roles.all')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(SemesterRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Get('/get_current_semester')
     async getCurrentSemester(@Res() res: Response) {
         try {
@@ -53,6 +110,28 @@ export class SemestersController {
         }
     }
 
+    @ApiOperation({
+        summary: 'Get years',
+        description: 'Get years registereds in semesters',
+    })
+    @ApiTags('roles.all')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            type: 'array',
+                            items: {
+                                type: 'integer',
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Get('/get_years')
     async getYears(@Res() res: Response) {
         try {
@@ -65,6 +144,26 @@ export class SemestersController {
         }
     }
 
+    @ApiExtraModels(FinishSemesterRes)
+    @ApiOperation({
+        summary: 'Get finish semester',
+        description: 'Get finish semester',
+    })
+    @ApiTags('roles.directive', 'roles.director')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(FinishSemesterRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Get('/get_finish_semester')
     async getFinishSemester(@Res() res: Response) {
@@ -79,6 +178,26 @@ export class SemestersController {
         }
     }
 
+    @ApiExtraModels(SemestersRes)
+    @ApiOperation({
+        summary: 'Get semester year',
+        description: 'Get semester by year',
+    })
+    @ApiTags('roles.directive', 'roles.director')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(SemestersRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Get('/get_semester_year/:year')
     async getSemesterYear(
@@ -97,6 +216,26 @@ export class SemestersController {
         }
     }
 
+    @ApiExtraModels(SemesterRes)
+    @ApiOperation({
+        description: 'Get user participated semesters',
+        summary: 'Get participated semesters',
+    })
+    @ApiTags('roles.student', 'roles.student_directive')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(SemestersRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Roles(Role.STUDENT, Role.STUDENT_DIRECTIVE)
     @Get('/get_participated_semesters')
     async getParticipatedSemesters(@Res() res: Response, @Req() req: Request) {
@@ -112,6 +251,26 @@ export class SemestersController {
         }
     }
 
+    @ApiExtraModels(RepeatingStudentRes)
+    @ApiOperation({
+        description: 'Get repeating students',
+        summary: 'Get repeating students',
+    })
+    @ApiTags('roles.directive', 'roles.director')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(RepeatingStudentRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Get('/get_repeating_students/:idSemester')
     async getRepeatingStudents(
@@ -130,6 +289,25 @@ export class SemestersController {
         }
     }
 
+    @ApiOperation({
+        description: 'Add semester',
+        summary: 'Add semester',
+    })
+    @ApiTags('roles.directive', 'roles.director')
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(SemesterRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Post('/add_semester')
     async newSemester(
@@ -138,7 +316,7 @@ export class SemestersController {
         @Body() semester: SemesterDTO,
     ) {
         try {
-            const user: PayloadToken = req.user
+            const user = req.user as PayloadToken
             const newSemester = await this.semestersService.newSemester(
                 semester,
                 user._id,
@@ -151,15 +329,23 @@ export class SemestersController {
         }
     }
 
+    @ApiOperation({
+        description: 'Init semester',
+        summary: 'Init semester',
+    })
+    @ApiOkResponse({
+        schema: { $ref: getSchemaPath(ResApi) },
+    })
+    @ApiTags('roles.directive', 'roles.director')
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
-    @Post('/init_semester/:id')
+    @Post('/init_semester/:idSemester')
     async initSemester(
         @Res() res: Response,
         @Req() req: Request,
-        @Param('id', MongoIdPipe) semesterId: string,
+        @Param('idSemester', MongoIdPipe) semesterId: string,
     ) {
         try {
-            const user: PayloadToken = req.user
+            const user = req.user as PayloadToken
             await this.semestersService.initSemester(semesterId, user._id)
             handleRes(res)
         } catch (err) {
@@ -167,16 +353,35 @@ export class SemestersController {
         }
     }
 
+    @ApiOperation({
+        description: 'Update semester',
+        summary: 'Update semester',
+    })
+    @ApiOkResponse({
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(ResApi) },
+                {
+                    properties: {
+                        body: {
+                            $ref: getSchemaPath(SemesterRes),
+                        },
+                    },
+                },
+            ],
+        },
+    })
+    @ApiTags('roles.directive', 'roles.director')
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
-    @Put('/update_semester/:id')
+    @Put('/update_semester/:idSemester')
     async updateSemester(
         @Res() res: Response,
         @Req() req: Request,
-        @Param('id', MongoIdPipe) idSemester: string,
+        @Param('idSemester', MongoIdPipe) idSemester: string,
         @Body() semester: SemesterUpdateDTO,
     ) {
         try {
-            const user: PayloadToken = req.user
+            const user = req.user as PayloadToken
             const semesterUpdated = await this.semestersService.updateSemester(
                 semester,
                 idSemester,
@@ -190,6 +395,14 @@ export class SemestersController {
         }
     }
 
+    @ApiOperation({
+        description: 'Finish semester',
+        summary: 'Finish semester',
+    })
+    @ApiOkResponse({
+        schema: { $ref: getSchemaPath(ResApi) },
+    })
+    @ApiTags('roles.directive', 'roles.director')
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Put('/finish_semester')
     async finishSemester(
@@ -210,6 +423,14 @@ export class SemestersController {
         }
     }
 
+    @ApiOperation({
+        description: 'Interrupt process finish semester if is actived',
+        summary: 'Interrupt finish semester',
+    })
+    @ApiOkResponse({
+        schema: { $ref: getSchemaPath(ResApi) },
+    })
+    @ApiTags('roles.directive', 'roles.director')
     @Roles(Role.DIRECTIVE, Role.DIRECTOR)
     @Put('/interrupt_finish_semester')
     async interrumptFinishSemester(@Res() res: Response, @Req() req: Request) {
