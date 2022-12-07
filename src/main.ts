@@ -3,7 +3,6 @@ import { NestFactory } from '@nestjs/core'
 import { MicroserviceOptions, Transport } from '@nestjs/microservices'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import helmet from 'helmet'
-import * as csruf from 'csurf'
 import { AppModule } from './app.module'
 import config from './config'
 import { ResApi } from './models/res.model'
@@ -66,6 +65,8 @@ async function bootstrap() {
             contentSecurityPolicy: false,
         }),
     )
+    // Csurf
+    // app.use(csruf())
     // Swagger
     const configDocs = new DocumentBuilder()
         .setTitle('Main API')
@@ -116,8 +117,6 @@ async function bootstrap() {
         ],
     })
     SwaggerModule.setup('/api/docs', app, docuement)
-    // Csurf
-    app.use(csruf())
     await app.listen(3000)
 }
 bootstrap()
