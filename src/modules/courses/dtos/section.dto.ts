@@ -12,5 +12,5 @@ export class SectionDTO {
     section: string
 
     @ApiProperty({ type: 'string', format: 'binary' })
-    file: any
+    image: any
 }

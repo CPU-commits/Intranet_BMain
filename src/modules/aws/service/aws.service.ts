@@ -28,6 +28,7 @@ export class AwsService {
                 return data
             })
             .catch((error: Error) => {
+                console.log(error)
                 throw new BadRequestException(error.Message)
             })
         return fileUploaded

@@ -149,7 +149,7 @@ export class SemestersService {
             .exec()
         return {
             semester_status: await this.getCurrentSemesterStatus(),
-            close_date_semester: closeDateSemester.value,
+            close_date_semester: closeDateSemester?.value ?? undefined,
         }
     }
 
