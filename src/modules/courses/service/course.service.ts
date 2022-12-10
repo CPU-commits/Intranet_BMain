@@ -278,7 +278,7 @@ export class CourseService {
                 },
             })
             .exec()
-        if (getFiles) {
+        if (getFiles && sections.length > 0) {
             const images = await lastValueFrom(
                 this.natsClient.send(
                     'get_aws_token_access',
