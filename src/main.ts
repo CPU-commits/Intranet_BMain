@@ -60,6 +60,7 @@ async function bootstrap() {
         origin: [httpClient, httpsClient],
         methods: ['GET', 'PUT', 'POST', 'DELETE'],
         credentials: true,
+        allowedHeaders: '*',
     })
     // Helmet
     app.use(
