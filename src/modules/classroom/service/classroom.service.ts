@@ -117,7 +117,7 @@ export class ClassroomService {
         if (!gradeConfigData[0]) return gradeConfig
         gradeConfig.set(GradeConfigKeys.MIN, gradeConfigData[0].value)
         gradeConfig.set(GradeConfigKeys.MAX, gradeConfigData[1].value)
-        return gradeConfig
+        return Object.fromEntries(gradeConfig)
     }
 
     async addModules(modules: ModuleClass[]) {
