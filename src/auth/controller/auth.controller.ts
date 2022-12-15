@@ -1,4 +1,12 @@
-import { Controller, Post, Req, Res, UseGuards } from '@nestjs/common'
+import {
+    BadRequestException,
+    Controller,
+    Get,
+    Post,
+    Req,
+    Res,
+    UseGuards,
+} from '@nestjs/common'
 import { Request, Response } from 'express'
 import { AuthGuard } from '@nestjs/passport'
 
@@ -12,11 +20,27 @@ export class AuthController {
 
     @UseGuards(AuthGuard('local'))
     @Post('/')
-    login(@Req() req: Request, @Res() res: Response) {
+    async login(@Req() req: Request, @Res() res: Response) {
         try {
             const user = req.user as User & { _id: string }
-            const token = this.authService.generateJWT(user)
+            const token = await this.authService.generateJWT(user)
             res.json(token)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Get('/refresh')
+    async refresh(@Req() req: Request, @Res() res: Response) {
+        try {
+            const token = req.headers.refresh_token
+            if (typeof token !== 'string')
+                throw new BadRequestException('Refresh token missing')
+            const accessToken = await this.authService.generateAccess(token)
+            res.json({
+                access_token: accessToken,
+            })
+            res.json()
         } catch (err) {
             handleError(err, res)
         }

@@ -9,6 +9,8 @@ import { AuthService } from './services/auth.service'
 import config from 'src/config'
 import { LocalStrategy } from './strategies/local.strategy'
 import { JwtStrategy } from './strategies/jwt.strategy'
+import { MongooseModule } from '@nestjs/mongoose'
+import { Auth, AuthShema } from './entities/auth.model'
 
 @Module({
     imports: [
@@ -21,13 +23,19 @@ import { JwtStrategy } from './strategies/jwt.strategy'
                     algorithm: 'HS256',
                 }
                 if (configService.node_env === 'prod')
-                    signOptions.expiresIn = '3h'
+                    signOptions.expiresIn = '2h'
                 return {
                     secret: configService.jwtSecret,
                     signOptions,
                 }
             },
         }),
+        MongooseModule.forFeature([
+            {
+                name: Auth.name,
+                schema: AuthShema,
+            },
+        ]),
     ],
     controllers: [AuthController],
     providers: [AuthService, LocalStrategy, JwtStrategy],

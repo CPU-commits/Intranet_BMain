@@ -17,6 +17,7 @@ export default registerAs('config', () => {
             connection: process.env.MONGO_CONNECTION,
         },
         jwtSecret: process.env.JWT_SECRET_KEY,
+        jwtRefresh: process.env.JWT_REFRESH_KEY,
         node_env: nodeEnv,
         aws: {
             bucket: process.env.AWS_BUCKET,
