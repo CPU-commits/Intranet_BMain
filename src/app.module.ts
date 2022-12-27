@@ -24,6 +24,7 @@ import { BookLifeModule } from './modules/book_life/book_life.module'
 import { LibraryModule } from './modules/library/library.module'
 import { CollegeModule } from './modules/college/college.module'
 import { APP_GUARD } from '@nestjs/core'
+import { MainController } from './main/main.controller'
 
 @Module({
     imports: [
@@ -68,7 +69,7 @@ import { APP_GUARD } from '@nestjs/core'
             limit: 7,
         }),
     ],
-    controllers: [AppController],
+    controllers: [AppController, MainController],
     providers: [
         AppService,
         {
