@@ -22,6 +22,35 @@ export class AuthService {
         @Inject(config.KEY) private configService: ConfigType<typeof config>,
     ) {}
 
+    private async deleteExpiredTokens(idUser: string) {
+        const auth = await this.authModel
+            .findOne({
+                user: idUser,
+            })
+            .exec()
+        if (auth) {
+            const tokens = auth.refresh_tokens
+            const expiredTokens = tokens.filter(
+                (token) =>
+                    !jwt.verify(token.token, this.configService.jwtRefresh, {
+                        ignoreExpiration: false,
+                    }),
+            )
+            await auth
+                .updateOne(
+                    {
+                        $pull: {
+                            refresh_tokens: {
+                                $in: expiredTokens,
+                            },
+                        },
+                    },
+                    { new: true },
+                )
+                .exec()
+        }
+    }
+
     async validateUser(rut: string, password: string) {
         const user = await this.usersService.getUserRUT(rut)
         if (user) {
@@ -50,14 +79,18 @@ export class AuthService {
             })
             .exec()
         if (!auth) throw new UnauthorizedException('No has iniciado sesión')
+        const refreshTokenIndex = auth.refresh_tokens.findIndex(
+            (rf) => rf.token === refreshToken,
+        )
         if (
-            auth.refresh_token !== refreshToken ||
+            refreshTokenIndex === -1 ||
             !jwt.verify(refreshToken, this.configService.jwtRefresh, {
                 ignoreExpiration: false,
             })
         )
             throw new UnauthorizedException('Unauthorized')
-        if (auth.uses === 3)
+        const refreshTokenAuth = auth.refresh_tokens[refreshTokenIndex]
+        if (refreshTokenAuth.uses === 4)
             throw new UnauthorizedException(
                 'Has excedido la cantidad de sesiones, inicia sesión nuevamente',
             )
@@ -67,7 +100,15 @@ export class AuthService {
             .updateOne(
                 {
                     $set: {
-                        uses: auth.uses + 1,
+                        refresh_tokens: auth.refresh_tokens.map((rt) => {
+                            return {
+                                ...rt,
+                                uses:
+                                    rt.token === refreshToken
+                                        ? rt.uses + 1
+                                        : rt.uses,
+                            }
+                        }),
                     },
                 },
                 { new: true },
@@ -80,6 +121,7 @@ export class AuthService {
             type: 'access',
             name: `${user.name} ${user.first_lastname}`,
         }
+        this.deleteExpiredTokens()
         return this.jwtService.sign(payload)
     }
 
@@ -100,7 +142,12 @@ export class AuthService {
         if (!user) {
             const newUser = new this.authModel({
                 last_session: new Date(),
-                refresh_token: token,
+                refresh_token: [
+                    {
+                        token,
+                        uses: 0,
+                    },
+                ],
                 user: idUser,
             })
             await newUser.save()
@@ -108,15 +155,18 @@ export class AuthService {
             await user
                 .updateOne(
                     {
-                        $set: {
-                            refresh_token: token,
-                            last_session: new Date(),
-                            uses: 0,
+                        $push: {
+                            refresh_tokens: {
+                                refresh_token: token,
+                                last_session: new Date(),
+                                uses: 0,
+                            },
                         },
                     },
                     { new: true },
                 )
                 .exec()
+            this.deleteExpiredTokens(idUser)
         }
 
         return token
