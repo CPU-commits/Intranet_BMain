@@ -1,8 +1,10 @@
-import { Controller } from '@nestjs/common'
+import { Controller, UseInterceptors } from '@nestjs/common'
 import { MessagePattern, Payload } from '@nestjs/microservices'
+import { LoggerInterceptor } from 'src/logger.interceptor'
 import { GradeConfigKeys } from '../../models/grade_config.model'
 import { ClassroomService } from '../../service/classroom.service'
 
+@UseInterceptors(LoggerInterceptor)
 @Controller('nats')
 export class NatsController {
     constructor(private readonly classroomService: ClassroomService) {}

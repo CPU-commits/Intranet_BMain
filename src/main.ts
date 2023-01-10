@@ -31,12 +31,15 @@ import { Student } from './modules/students/entities/student.entity'
 import { List } from './modules/students/entities/voting.entity'
 import { Vote } from './modules/students/entities/vote.entity'
 import { ListDTO } from './modules/students/dtos/voting.dto'
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston'
 
 async function bootstrap() {
     // Config
     const configService = config()
     // App
     const app = await NestFactory.create(AppModule)
+    // Logger
+    app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER))
     // NATS Microservice
     app.connectMicroservice<MicroserviceOptions>({
         transport: Transport.NATS,

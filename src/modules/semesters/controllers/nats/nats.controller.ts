@@ -1,7 +1,9 @@
-import { Controller } from '@nestjs/common'
+import { Controller, UseInterceptors } from '@nestjs/common'
 import { MessagePattern, Payload } from '@nestjs/microservices'
+import { LoggerInterceptor } from 'src/logger.interceptor'
 import { SemestersService } from '../../service/semesters.service'
 
+@UseInterceptors(LoggerInterceptor)
 @Controller('nats')
 export class NatsController {
     constructor(private readonly semesterService: SemestersService) {}
