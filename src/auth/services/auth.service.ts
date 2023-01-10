@@ -121,7 +121,7 @@ export class AuthService {
             type: 'access',
             name: `${user.name} ${user.first_lastname}`,
         }
-        this.deleteExpiredTokens()
+        this.deleteExpiredTokens(valueToken._id)
         return this.jwtService.sign(payload)
     }
 
