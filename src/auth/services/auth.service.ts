@@ -142,7 +142,7 @@ export class AuthService {
         if (!user) {
             const newUser = new this.authModel({
                 last_session: new Date(),
-                refresh_token: [
+                refresh_tokens: [
                     {
                         token,
                         uses: 0,
