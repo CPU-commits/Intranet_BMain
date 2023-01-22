@@ -435,7 +435,8 @@ export class CourseController {
         @Res() res: Response,
         @Req() req: Request,
         @Param('idCourse', MongoIdPipe) idCourse: string,
-        @UploadedFile() file: Express.Multer.File,
+        @UploadedFile()
+        file: Express.Multer.File,
         @Body() section: SectionDTO,
     ) {
         try {
@@ -538,7 +539,8 @@ export class CourseController {
         @Res() res: Response,
         @Req() req: Request,
         @Param('idSection', MongoIdPipe) idSection: string,
-        @UploadedFile() file: Express.Multer.File,
+        @UploadedFile()
+        file: Express.Multer.File,
     ) {
         try {
             const user = req.user as PayloadToken
