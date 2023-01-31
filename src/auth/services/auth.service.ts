@@ -30,12 +30,16 @@ export class AuthService {
             .exec()
         if (auth) {
             const tokens = auth.refresh_tokens
-            const expiredTokens = tokens.filter(
-                (token) =>
-                    !jwt.verify(token.token, this.configService.jwtRefresh, {
+            const expiredTokens = tokens.filter((token) => {
+                try {
+                    jwt.verify(token.token, this.configService.jwtRefresh, {
                         ignoreExpiration: false,
-                    }),
-            )
+                    })
+                    return true
+                } catch (err) {
+                    return false
+                }
+            })
             await auth
                 .updateOne(
                     {
@@ -53,7 +57,7 @@ export class AuthService {
 
     async validateUser(rut: string, password: string) {
         const user = await this.usersService.getUserRUT(rut)
-        if (user) {
+        if (user && user.status > 0) {
             const isMatch = await bcrypt.compare(password, user.password)
             if (isMatch) {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -8,6 +8,7 @@ import { UsersController } from './controller/users.controller'
 import { StudentsModule } from '../students/students.module'
 import { TeachersModule } from '../teachers/teachers.module'
 import { HistoryModule } from '../history/history.module'
+import { NatsController } from './controller/nats/nats.controller';
 
 @Module({
     imports: [
@@ -23,6 +24,6 @@ import { HistoryModule } from '../history/history.module'
     ],
     providers: [UsersService],
     exports: [UsersService],
-    controllers: [UsersController],
+    controllers: [UsersController, NatsController],
 })
 export class UsersModule {}
