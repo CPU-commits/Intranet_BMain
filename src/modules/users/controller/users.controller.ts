@@ -3,6 +3,7 @@ import {
     Controller,
     Get,
     Post,
+    Query,
     Req,
     Res,
     UseGuards,
@@ -16,6 +17,7 @@ import {
     getSchemaPath,
 } from '@nestjs/swagger'
 import { Request, Response } from 'express'
+import { Public } from 'src/auth/decorators/public.decorator'
 import { Roles } from 'src/auth/decorators/roles.decorator'
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard'
 import { RolesGuard } from 'src/auth/guards/roles.guard'
@@ -23,7 +25,9 @@ import { Role } from 'src/auth/models/roles.model'
 import { PayloadToken } from 'src/auth/models/token.model'
 import { ResApi } from 'src/models/res.model'
 import handleError from 'src/res/handleError'
+import { handleRedirect } from 'src/res/handleRedirect'
 import handleRes from 'src/res/handleRes'
+import { ContactDTO } from '../dtos/contact.dto'
 import { EmailDTO } from '../dtos/email.dto'
 import { PersonsRes } from '../res/persons.res'
 import { UserRes } from '../res/user.res'
@@ -126,6 +130,47 @@ export class UsersController {
             handleRes(res)
         } catch (err) {
             handleError(err, res)
+        }
+    }
+
+    @Public()
+    @Post('/recover_password')
+    async recoverPassword(@Res() res: Response, @Body() contact: ContactDTO) {
+        try {
+            await this.usersService.recoverPassword(contact.contact)
+            handleRes(res)
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
+    @Public()
+    @Get('/recover_password_token')
+    async recoverPasswordToken(
+        @Res() res: Response,
+        @Query('token') token: string,
+    ) {
+        try {
+            await this.usersService.recoverPasswordToken(token)
+            // Params
+            const params = new Map<string, string>()
+            params.set('reset', 'true')
+
+            handleRedirect(res, {
+                to: '/',
+                toClient: true,
+                params,
+            })
+        } catch (err) {
+            // Params
+            const params = new Map<string, string>()
+            params.set('reset', 'false')
+
+            handleRedirect(res, {
+                to: '/',
+                toClient: true,
+                params,
+            })
         }
     }
 }

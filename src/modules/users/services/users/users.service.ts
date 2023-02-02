@@ -1,9 +1,16 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import {
+    ConflictException,
+    forwardRef,
+    Inject,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import * as bcrypt from 'bcrypt'
 
 import { UpdateUserDTO, UserDTO } from '../../dtos/user.dto'
+import { randomUUID } from 'crypto'
 
 import { User } from '../../entities/user.entity'
 import { Role } from 'src/auth/models/roles.model'
@@ -11,16 +18,25 @@ import { StudentsService } from 'src/modules/students/service/students.service'
 import { TeachersService } from 'src/modules/teachers/service/teachers.service'
 import { HistoryService } from 'src/modules/history/service/history.service'
 import { ObjectId } from 'mongodb'
+import { UsersToken } from '../../entities/users_token.entity'
+import { Permissions } from '../../models/permissions.model'
+import * as moment from 'moment'
+import { ClientProxy } from '@nestjs/microservices'
+import { Email } from 'src/models/email/imail.model'
+import { RecoverPasswordTemplate } from 'src/models/email/templates/recover_password.model'
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectModel(User.name) private userModel: Model<User>,
+        @InjectModel(UsersToken.name)
+        private readonly usersTokensModel: Model<UsersToken>,
         @Inject(forwardRef(() => StudentsService))
         private studentsService: StudentsService,
         @Inject(forwardRef(() => TeachersService))
         private teachersService: TeachersService,
         private readonly historyService: HistoryService,
+        @Inject('NATS_CLIENT') private readonly natsClient: ClientProxy,
     ) {}
 
     private async generatePassword(password: string) {
@@ -164,6 +180,10 @@ export class UsersService {
         return await this.userModel.findOne({ rut }).exec()
     }
 
+    async getUserEmail(email: string) {
+        return await this.userModel.findOne({ email }).exec()
+    }
+
     async getPersonsHistory() {
         const persons = await this.historyService.getPersons()
         return await this.getUsersFromIds(persons)
@@ -214,6 +234,83 @@ export class UsersService {
                         email,
                     },
                 },
+                { new: true },
+            )
+            .exec()
+    }
+
+    async recoverPassword(contact: string) {
+        let idUser: string | null = null
+        let email: string | null = null
+        // Try to get by rut
+        const userRut = await this.getUserRUT(contact)
+        if (!userRut) {
+            // Try to get by email
+            const userEmail = await this.getUserEmail(contact)
+            if (userEmail) {
+                email = contact
+                idUser = userEmail._id.toString()
+            }
+        } else if (userRut?.email) {
+            email = userRut.email
+            idUser = userRut._id.toString()
+        }
+        if (!email)
+            throw new ConflictException(
+                'No hay email asociado al contacto indicado',
+            )
+        // Try to get token and delete
+        await this.usersTokensModel
+            .findOneAndDelete(
+                {
+                    user: idUser,
+                    permissions: { $in: [Permissions.RECOVER_PASSWORD] },
+                },
+                { _id: 1 },
+            )
+            .exec()
+        // Generate new token
+        const token = randomUUID()
+
+        const newToken = new this.usersTokensModel({
+            user: idUser,
+            token,
+            permissions: [Permissions.RECOVER_PASSWORD],
+            expired_at: moment().add(5, 'hours').toDate(),
+        })
+        await newToken.save()
+        // Send email
+        this.natsClient.emit('imail/send', {
+            to: email,
+            isIdUser: false,
+            subject: 'Recuperar contraseña - Intranet',
+            template: 'recover_password',
+            templateProps: {
+                '{{ TOKEN }}': token,
+            },
+        } as Email<RecoverPasswordTemplate>)
+    }
+
+    async recoverPasswordToken(token: string) {
+        // Get token with permission
+        const userToken = await this.usersTokensModel
+            .findOne({
+                token,
+                permissions: { $in: [Permissions.RECOVER_PASSWORD] },
+            })
+            .exec()
+        console.log(userToken)
+        if (!userToken)
+            throw new NotFoundException('No existe este token o está vencido')
+        // Check if expired
+        if (moment(userToken.expired_at).isBefore(new Date()))
+            throw new NotFoundException('No existe este token o está vencido')
+        const user = await this.getUserID(userToken.user.toString())
+        const password = user.rut.slice(3, user.rut.length - 2)
+        return await this.userModel
+            .findByIdAndUpdate(
+                userToken.user,
+                { $set: { password: await this.generatePassword(password) } },
                 { new: true },
             )
             .exec()
