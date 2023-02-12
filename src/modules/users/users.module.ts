@@ -11,8 +11,7 @@ import { HistoryModule } from '../history/history.module'
 import { NatsController } from './controller/nats/nats.controller'
 import { UsersToken, UsersTokenSchema } from './entities/users_token.entity'
 import { ClientsModule, Transport } from '@nestjs/microservices'
-import { ConfigType } from '@nestjs/config'
-import config from 'src/config'
+import { getNatsServers } from 'src/utils/get_nats_servers'
 
 @Module({
     imports: [
@@ -29,12 +28,12 @@ import config from 'src/config'
         ClientsModule.registerAsync([
             {
                 name: 'NATS_CLIENT',
-                inject: [config.KEY],
-                useFactory: (configService: ConfigType<typeof config>) => {
+                useFactory: () => {
                     return {
                         transport: Transport.NATS,
                         options: {
-                            servers: [`nats://${configService.nats}:4222`],
+                            servers: getNatsServers(),
+                            queue: 'main',
                         },
                     }
                 },

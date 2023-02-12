@@ -13,8 +13,7 @@ import { TeachersModule } from '../teachers/teachers.module'
 import { ClassroomModule } from '../classroom/classroom.module'
 import { AwsModule } from '../aws/aws.module'
 import { ClientsModule, Transport } from '@nestjs/microservices'
-import config from 'src/config'
-import { ConfigType } from '@nestjs/config'
+import { getNatsServers } from 'src/utils/get_nats_servers'
 
 @Module({
     imports: [
@@ -39,12 +38,12 @@ import { ConfigType } from '@nestjs/config'
         ClientsModule.registerAsync([
             {
                 name: 'NATS_CLIENT',
-                inject: [config.KEY],
-                useFactory: (configService: ConfigType<typeof config>) => {
+                useFactory: () => {
                     return {
                         transport: Transport.NATS,
                         options: {
-                            servers: [`nats://${configService.nats}:4222`],
+                            servers: getNatsServers(),
+                            queue: 'main',
                         },
                     }
                 },

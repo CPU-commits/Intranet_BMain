@@ -32,6 +32,7 @@ import { List } from './modules/students/entities/voting.entity'
 import { Vote } from './modules/students/entities/vote.entity'
 import { ListDTO } from './modules/students/dtos/voting.dto'
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston'
+import { getNatsServers } from './utils/get_nats_servers'
 
 async function bootstrap() {
     // Config
@@ -44,7 +45,8 @@ async function bootstrap() {
     app.connectMicroservice<MicroserviceOptions>({
         transport: Transport.NATS,
         options: {
-            servers: [`nats://${configService.nats}:4222`],
+            servers: getNatsServers(),
+            queue: 'main',
         },
     })
     await app.startAllMicroservices()

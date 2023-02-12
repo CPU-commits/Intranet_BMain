@@ -12,8 +12,6 @@ import {
     DirectiveSchema,
 } from '../classroom/entities/directive.entity'
 import { ClientsModule, Transport } from '@nestjs/microservices'
-import config from 'src/config'
-import { ConfigType } from '@nestjs/config'
 import {
     RepeatingStudent,
     RepeatingStudentSchema,
@@ -31,6 +29,7 @@ import {
     NextSectionStudent,
     NextSectionStudentSchema,
 } from './entities/next_section_student'
+import { getNatsServers } from 'src/utils/get_nats_servers'
 
 @Module({
     imports: [
@@ -69,12 +68,12 @@ import {
         ClientsModule.registerAsync([
             {
                 name: 'NATS_CLIENT',
-                inject: [config.KEY],
-                useFactory: (configService: ConfigType<typeof config>) => {
+                useFactory: () => {
                     return {
                         transport: Transport.NATS,
                         options: {
-                            servers: [`nats://${configService.nats}:4222`],
+                            servers: getNatsServers(),
+                            queue: 'main',
                         },
                     }
                 },

@@ -9,9 +9,8 @@ import { KeyValue, KeyValueSchema } from '../college/entities/key_value.entity'
 import { Voting, VotingSchema } from './entities/voting.entity'
 import { SemestersModule } from '../semesters/semesters.module'
 import { ClientsModule, Transport } from '@nestjs/microservices'
-import config from 'src/config'
-import { ConfigType } from '@nestjs/config'
 import { Vote, VoteSchema } from './entities/vote.entity'
+import { getNatsServers } from 'src/utils/get_nats_servers'
 
 @Module({
     imports: [
@@ -36,12 +35,12 @@ import { Vote, VoteSchema } from './entities/vote.entity'
         ClientsModule.registerAsync([
             {
                 name: 'NATS_CLIENT',
-                inject: [config.KEY],
-                useFactory: (configService: ConfigType<typeof config>) => {
+                useFactory: () => {
                     return {
                         transport: Transport.NATS,
                         options: {
-                            servers: [`nats://${configService.nats}:4222`],
+                            servers: getNatsServers(),
+                            queue: 'main',
                         },
                     }
                 },
