@@ -47,7 +47,6 @@ import { getNatsServers } from 'src/utils/get_nats_servers'
                         transport: Transport.NATS,
                         options: {
                             servers: getNatsServers(),
-                            queue: 'main',
                         },
                     }
                 },
