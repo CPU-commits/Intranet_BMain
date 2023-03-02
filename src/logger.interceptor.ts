@@ -29,9 +29,7 @@ export class LoggerInterceptor implements NestInterceptor {
         return next.handle().pipe(
             map((data) => {
                 this.logger.log(`Success Req NATS ${UNIQUE_INTERCEPTOR_ID}`)
-                return {
-                    ...data,
-                }
+                return data
             }),
             catchError((err) => {
                 console.log(err)
