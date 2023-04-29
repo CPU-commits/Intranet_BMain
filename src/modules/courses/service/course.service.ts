@@ -169,13 +169,13 @@ export class CourseService {
                 )
         }
         if (!courseData.isFinal && course.isFinal) {
-            const existsFinal = await this.getCoursesCustom(
+            const existsFinal = (await this.getCoursesCustom(
                 {
                     isFinal: true,
                 },
                 null,
                 true,
-            )
+            )) as number
             if (existsFinal > 0)
                 throw new ConflictException(
                     'No pueden existir dos cursos finales',
@@ -646,13 +646,13 @@ export class CourseService {
     async deleteCycle(cycleId: string, idUser: string) {
         const cycle = await this.getCycleFromID(cycleId)
         if (!cycle) throw new NotFoundException('No existe el ciclo')
-        const isUsed = await this.getCoursesCustom(
+        const isUsed = (await this.getCoursesCustom(
             {
                 cycle: cycleId,
             },
             null,
             true,
-        )
+        )) as number
         if (isUsed > 0)
             throw new ConflictException(
                 'Este ciclo está siendo usado por algún curso',

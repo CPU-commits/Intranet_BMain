@@ -30,6 +30,7 @@ import { MainController } from './main/main.controller'
 import { CorrelationIdMiddleware } from './correlation-id.middleware'
 import { MulterModule } from '@nestjs/platform-express'
 import { MAX_FILES, MAX_FILE_SIZE } from './common/max_size_file'
+import { FilesModule } from './modules/files/files.module'
 
 @Module({
     imports: [
@@ -112,6 +113,7 @@ import { MAX_FILES, MAX_FILE_SIZE } from './common/max_size_file'
             },
             inject: [config.KEY],
         }),
+        FilesModule,
     ],
     controllers: [AppController, MainController],
     providers: [
