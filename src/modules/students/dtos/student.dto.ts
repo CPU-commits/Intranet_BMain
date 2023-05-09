@@ -8,6 +8,12 @@ export class StudentDTO extends UserDTO {
     @IsString()
     @IsNotEmpty()
     registration_number: string
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @IsMongoId()
+    @IsNotEmpty()
+    course?: string
 }
 
 export class UpdateStudentDTO extends UpdateUserDTO {

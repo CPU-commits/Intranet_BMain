@@ -223,6 +223,7 @@ export class StudentsService {
         const newStudent = new this.studentModel({
             user: newUser._id.toString(),
             registration_number,
+            course: student.course,
         })
         await newStudent.save()
         this.historyService.insertChange(
@@ -249,6 +250,7 @@ export class StudentsService {
             return {
                 user: student._id.toString(),
                 registration_number: students[i].registration_number,
+                course: students[i].course,
             }
         })
         await this.studentModel.insertMany(response)
