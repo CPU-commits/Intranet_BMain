@@ -19,6 +19,7 @@ import { User } from 'src/modules/users/entities/user.entity'
 import { UsersService } from 'src/modules/users/services/users/users.service'
 import { SubjectCourseDTO } from '../dtos/subject_course.dto'
 import { Teacher } from '../entities/teacher.entity'
+import { Course } from 'src/modules/courses/entities/course.entity'
 
 @Injectable()
 export class TeachersService {
@@ -241,7 +242,9 @@ export class TeachersService {
         const section = teacherUpdated.imparted[index].course as CourseLetter
         const subject = teacherUpdated.imparted[index].subject as Subject
         this.historyService.insertChange(
-            `Se añade la materia y curso (${section.course} ${section.section} - ${subject.subject}) al
+            `Se añade la materia y curso (${
+                (section.course as Course).course
+            } ${section.section} - ${subject.subject}) al
             profesor con RUT ${teacherUser.rut}`,
             Collections.USER,
             idUser,
