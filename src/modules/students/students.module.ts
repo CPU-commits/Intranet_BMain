@@ -11,6 +11,7 @@ import { SemestersModule } from '../semesters/semesters.module'
 import { ClientsModule, Transport } from '@nestjs/microservices'
 import { Vote, VoteSchema } from './entities/vote.entity'
 import { getNatsServers } from 'src/utils/get_nats_servers'
+import { NatsController } from './controller/nats/nats.controller';
 
 @Module({
     imports: [
@@ -50,7 +51,7 @@ import { getNatsServers } from 'src/utils/get_nats_servers'
         SemestersModule,
     ],
     providers: [StudentsService],
-    controllers: [StudentsController],
+    controllers: [StudentsController, NatsController],
     exports: [StudentsService],
 })
 export class StudentsModule {}

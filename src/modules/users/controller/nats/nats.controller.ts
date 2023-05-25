@@ -24,4 +24,17 @@ export class NatsController {
             },
         }
     }
+
+    @MessagePattern('get_users_by_id')
+    async getUsers(@Payload() data: Array<string>): Promise<NatsRes> {
+        const users = await this.usersService.getUsers({
+            _id: {
+                $in: data.map((id) => new Object(id)),
+            },
+        })
+        return {
+            success: true,
+            data: users.users,
+        }
+    }
 }

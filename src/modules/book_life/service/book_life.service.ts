@@ -13,6 +13,7 @@ import { Role } from 'src/auth/models/roles.model'
 import { SemestersService } from 'src/modules/semesters/service/semesters.service'
 import { User } from 'src/modules/users/entities/user.entity'
 import { PayloadToken } from 'src/auth/models/token.model'
+import { ParentService } from 'src/modules/parents/services/parent/parent.service'
 
 @Injectable()
 export class BookLifeService {
@@ -21,13 +22,27 @@ export class BookLifeService {
         private readonly observationModel: Model<Observation>,
         private readonly usersService: UsersService,
         private readonly semestersService: SemestersService,
+        private readonly parentsService: ParentService,
     ) {}
 
     async getObservationById(idObservation: string) {
         return await this.observationModel.findById(idObservation)
     }
 
-    async getBooklife(idSemester: string, idUser: string) {
+    async getBooklife(
+        idSemester: string,
+        idUser: string,
+        user: PayloadToken | null,
+    ) {
+        if (user && user.user_type === Role.ATTORNEY) {
+            const students = await this.parentsService.getParentStudents(
+                user._id,
+            )
+            if (students.every((student) => student._id.toString() !== idUser))
+                throw new UnauthorizedException(
+                    'No tienes acceso al estudiante',
+                )
+        }
         return await this.observationModel
             .find(
                 {

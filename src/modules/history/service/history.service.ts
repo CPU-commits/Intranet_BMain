@@ -58,7 +58,7 @@ export class HistoryService {
         }
         const history = this.historyModel
             .find(filter)
-            .sort({ date: 1 })
+            .sort({ date: -1 })
             .skip(skip)
             .limit(limit)
             .populate('who', { name: 1, first_lastname: 1, rut: 1 })

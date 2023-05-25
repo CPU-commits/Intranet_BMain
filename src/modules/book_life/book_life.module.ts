@@ -5,6 +5,7 @@ import { BookLifeController } from './controller/book_life.controller'
 import { BookLifeService } from './service/book_life.service'
 import { UsersModule } from '../users/users.module'
 import { SemestersModule } from '../semesters/semesters.module'
+import { ParentsModule } from '../parents/parents.module'
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import { SemestersModule } from '../semesters/semesters.module'
         ]),
         UsersModule,
         SemestersModule,
+        ParentsModule,
     ],
     controllers: [BookLifeController],
     providers: [BookLifeService],

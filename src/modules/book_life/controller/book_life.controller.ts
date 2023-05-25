@@ -85,6 +85,7 @@ export class BookLifeController {
             const observations = await this.booklifeService.getBooklife(
                 semester,
                 user._id,
+                null,
             )
             handleRes(res, {
                 observations,
@@ -99,7 +100,6 @@ export class BookLifeController {
         summary: 'Get booklife student',
     })
     @ApiTags('roles.directive', 'roles.teacher', 'roles.director')
-    @Roles(Role.DIRECTIVE, Role.TEACHER, Role.DIRECTOR)
     @ApiQuery({
         name: 'semester',
         required: false,
@@ -120,16 +120,20 @@ export class BookLifeController {
             ],
         },
     })
+    @Roles(Role.DIRECTIVE, Role.TEACHER, Role.DIRECTOR, Role.ATTORNEY)
     @Get('/get_booklife_student/:idStudent')
     async getBooklifeStudent(
         @Res() res: Response,
+        @Req() req: Request,
         @Query('semester') semester: string,
         @Param('idStudent', MongoIdPipe) idStudent: string,
     ) {
         try {
+            const user = req.user as PayloadToken
             const observations = await this.booklifeService.getBooklife(
                 semester,
                 idStudent,
+                user,
             )
             handleRes(res, {
                 observations,

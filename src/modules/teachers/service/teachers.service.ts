@@ -192,7 +192,6 @@ export class TeachersService {
     ) {
         const teacher = await this.getTeacherByID(idTeacher)
         if (!teacher) throw new NotFoundException('No existe el profesor')
-        console.log(subjectCourse)
         const isUsed = teacher.imparted.some(
             (imparted) =>
                 (
@@ -202,7 +201,6 @@ export class TeachersService {
                     imparted.subject as Subject & { _id: string }
                 )._id.toString() === subjectCourse.subject,
         )
-        console.log(isUsed)
         if (isUsed)
             throw new ConflictException(
                 'La materia y curso, ya están asignados al profesor',
