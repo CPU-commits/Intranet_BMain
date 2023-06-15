@@ -71,6 +71,13 @@ export class User {
     })
     @Prop()
     email?: string
+
+    @ApiProperty({
+        example: '+56999999999',
+        required: false,
+    })
+    @Prop()
+    phone?: string
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)

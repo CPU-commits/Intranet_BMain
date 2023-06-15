@@ -59,14 +59,24 @@ async function bootstrap() {
             },
         }),
     )
-    const httpClient = `http://${configService.client_url}`
-    const httpsClient = `https://${configService.client_url}`
-    app.enableCors({
-        origin: [httpClient, httpsClient],
-        methods: ['GET', 'PUT', 'POST', 'DELETE'],
-        credentials: true,
-        allowedHeaders: '*',
-    })
+    // CORS
+    if (configService.node_env === 'prod') {
+        const httpClient = `http://${configService.client_url}`
+        const httpsClient = `https://${configService.client_url}`
+        app.enableCors({
+            origin: [httpClient, httpsClient],
+            methods: ['GET', 'PUT', 'POST', 'DELETE'],
+            credentials: true,
+            allowedHeaders: '*',
+        })
+    } else {
+        app.enableCors({
+            origin: '*',
+            methods: ['GET', 'PUT', 'POST', 'DELETE'],
+            credentials: true,
+            allowedHeaders: '*',
+        })
+    }
     // Helmet
     app.use(
         helmet({

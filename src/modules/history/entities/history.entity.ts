@@ -48,6 +48,12 @@ export class History {
     who: User | Types.ObjectId
 
     @ApiProperty({
+        oneOf: [{ type: 'string' }, { $ref: getSchemaPath(User) }],
+    })
+    @Prop({ type: Types.ObjectId, ref: User.name })
+    affected: User | Types.ObjectId
+
+    @ApiProperty({
         example: 'add',
         enum: [
             TypeChange.ADD,

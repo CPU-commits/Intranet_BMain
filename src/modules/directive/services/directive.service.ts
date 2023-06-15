@@ -41,12 +41,12 @@ export class DirectiveService {
             ...directive,
             user_type: Role.DIRECTIVE,
         })
-        this.historyService.insertChange(
-            `Se añade directivo con RUT ${directive.rut}`,
-            Collections.USER,
-            user_id,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se añade directivo con RUT ${directive.rut}`,
+            collection_name: Collections.USER,
+            who: user_id,
+            type_change: 'add',
+        })
         return newDirective
     }
 
@@ -59,14 +59,14 @@ export class DirectiveService {
                 }
             }),
         )
-        this.historyService.insertChange(
-            `Se añaden directivos con RUTs: ${directives
+        this.historyService.insertChange({
+            change: `Se añaden directivos con RUTs: ${directives
                 .map((directive) => directive.rut)
                 .join(', ')}`,
-            Collections.USER,
-            user_id,
-            'add',
-        )
+            collection_name: Collections.USER,
+            who: user_id,
+            type_change: 'add',
+        })
         return newDirectives
     }
 
@@ -79,12 +79,12 @@ export class DirectiveService {
             directive,
             directive_id,
         )
-        this.historyService.insertChange(
-            `Se actualiza directivo con RUT ${directive.rut}`,
-            Collections.USER,
-            user_id,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se actualiza directivo con RUT ${directive.rut}`,
+            collection_name: Collections.USER,
+            who: user_id,
+            type_change: 'update',
+        })
         return updatedDirective
     }
 
@@ -97,21 +97,23 @@ export class DirectiveService {
             status,
         )
         if (!status) {
-            this.historyService.insertChange(
-                `Se da de baja al directivo con RUT ${directive.rut}`,
-                Collections.USER,
-                user_id,
-                'dismiss',
+            this.historyService.insertChange({
+                change: `Se da de baja al directivo con RUT ${directive.rut}`,
+                collection_name: Collections.USER,
+                who: user_id,
+                type_change: 'dismiss',
                 why,
-            )
+                affected: directive._id,
+            })
         } else {
-            this.historyService.insertChange(
-                `Se reintegra al directivo con RUT ${directive.rut}`,
-                Collections.USER,
-                user_id,
-                'reintegrate',
+            this.historyService.insertChange({
+                change: `Se reintegra al directivo con RUT ${directive.rut}`,
+                collection_name: Collections.USER,
+                who: user_id,
+                type_change: 'reintegrate',
                 why,
-            )
+                affected: directive._id,
+            })
         }
         return dismiss
     }

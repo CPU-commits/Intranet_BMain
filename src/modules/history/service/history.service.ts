@@ -6,6 +6,7 @@ import { Semester } from 'src/modules/semesters/entities/semester.entity'
 
 import { History } from '../entities/history.entity'
 import { TypeChange, TypeChangeKey } from '../models/type_change.model'
+import { Types } from 'mongoose'
 
 @Injectable()
 export class HistoryService {
@@ -75,13 +76,21 @@ export class HistoryService {
         return persons
     }
 
-    async insertChange(
-        change: string,
-        collection_name: string,
-        who: string,
-        type_change: keyof typeof TypeChangeKey,
-        why?: string,
-    ) {
+    async insertChange({
+        change,
+        collection_name,
+        who,
+        type_change,
+        why,
+        affected,
+    }: {
+        change: string
+        collection_name: string
+        who: string
+        type_change: keyof typeof TypeChangeKey
+        why?: string
+        affected?: Types.ObjectId
+    }) {
         const semester = await this.semesterModel.findOne({ status: 2 }).exec()
         const now = new Date()
         const newChange = new this.historyModel({
@@ -92,6 +101,7 @@ export class HistoryService {
             why,
             date: now,
             semester: semester ? semester._id.toString() : undefined,
+            affected,
         })
         return await newChange.save()
     }

@@ -11,7 +11,8 @@ import { SemestersModule } from '../semesters/semesters.module'
 import { ClientsModule, Transport } from '@nestjs/microservices'
 import { Vote, VoteSchema } from './entities/vote.entity'
 import { getNatsServers } from 'src/utils/get_nats_servers'
-import { NatsController } from './controller/nats/nats.controller';
+import { NatsController } from './controller/nats/nats.controller'
+import { CollegeModule } from '../college/college.module'
 
 @Module({
     imports: [
@@ -49,6 +50,7 @@ import { NatsController } from './controller/nats/nats.controller';
         forwardRef(() => UsersModule),
         HistoryModule,
         SemestersModule,
+        CollegeModule,
     ],
     providers: [StudentsService],
     controllers: [StudentsController, NatsController],

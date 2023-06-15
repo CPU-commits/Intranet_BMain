@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { ApiProperty, getSchemaPath } from '@nestjs/swagger'
 import { Types } from 'mongoose'
+import { Address } from 'src/modules/college/entities/address.entity'
 import { CourseLetter } from 'src/modules/courses/entities/course_letter.entity'
 import { User } from 'src/modules/users/entities/user.entity'
 
@@ -23,6 +24,23 @@ export class Student {
     })
     @Prop({ required: true })
     registration_number: string
+
+    @ApiProperty({
+        example: 'h',
+        enum: ['h', 'm'],
+    })
+    @Prop({ required: true, enum: ['h', 'm'] })
+    gender: string
+
+    @ApiProperty({
+        example: '2022-08-08T15:32:58.384+00:00',
+    })
+    @Prop({ required: true, type: Date })
+    birthday: Date
+
+    @ApiProperty()
+    @Prop({ required: true, type: Types.ObjectId, ref: Address.name })
+    address: Types.ObjectId | Address
 }
 
 export const StudentSchema = SchemaFactory.createForClass(Student)

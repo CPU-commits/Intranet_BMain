@@ -47,12 +47,12 @@ export class SubjectsService {
     async newSubject(subject: SubjectDTO, idUser: string) {
         const newSubject = new this.subjectModel(subject)
         await newSubject.save()
-        this.historyService.insertChange(
-            `Se ha agregado la materia ${subject.subject}`,
-            Collections.SUBJECT,
-            idUser,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se ha agregado la materia ${subject.subject}`,
+            collection_name: Collections.SUBJECT,
+            who: idUser,
+            type_change: 'add',
+        })
         return newSubject
     }
 
@@ -79,12 +79,12 @@ export class SubjectsService {
                 new: true,
             },
         )
-        this.historyService.insertChange(
-            `Se ha eliminado la materia ${subject.subject}`,
-            Collections.SUBJECT,
-            idUser,
-            'delete',
-        )
+        this.historyService.insertChange({
+            change: `Se ha eliminado la materia ${subject.subject}`,
+            collection_name: Collections.SUBJECT,
+            who: idUser,
+            type_change: 'delete',
+        })
         return deletedSubject
     }
     // Specialties
@@ -93,12 +93,12 @@ export class SubjectsService {
             specialty,
         })
         await newSpecialty.save()
-        this.historyService.insertChange(
-            `Se ha agregado la especialidad ${specialty}`,
-            Collections.SPECIALTY,
-            idUser,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se ha agregado la especialidad ${specialty}`,
+            collection_name: Collections.SPECIALTY,
+            who: idUser,
+            type_change: 'add',
+        })
         return newSpecialty
     }
 
@@ -114,12 +114,12 @@ export class SubjectsService {
         const deletedSpecialty = await this.specialtyModel.findByIdAndDelete(
             idSpecialty,
         )
-        this.historyService.insertChange(
-            `Se ha eliminado la especialidad ${specialty.specialty}`,
-            Collections.SPECIALTY,
-            idUser,
-            'delete',
-        )
+        this.historyService.insertChange({
+            change: `Se ha eliminado la especialidad ${specialty.specialty}`,
+            collection_name: Collections.SPECIALTY,
+            who: idUser,
+            type_change: 'delete',
+        })
         return deletedSpecialty
     }
     // Anchors
@@ -149,12 +149,12 @@ export class SubjectsService {
                 { new: true },
             )
             .exec()
-        this.historyService.insertChange(
-            `Se ha añadido la materia ${exists.subject.subject} al curso ${exists.course.course}`,
-            Collections.COURSE,
-            userId,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se ha añadido la materia ${exists.subject.subject} al curso ${exists.course.course}`,
+            collection_name: Collections.COURSE,
+            who: userId,
+            type_change: 'add',
+        })
         return exists.subject
     }
 
@@ -188,12 +188,12 @@ export class SubjectsService {
                 { new: true },
             )
             .exec()
-        this.historyService.insertChange(
-            `Se ha eliminado la materia ${exists.subject.subject} del curso ${exists.course.course}`,
-            Collections.COURSE,
-            idUser,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se ha eliminado la materia ${exists.subject.subject} del curso ${exists.course.course}`,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'add',
+        })
         return exists.subject
     }
 }

@@ -213,12 +213,12 @@ export class SemestersService {
             )
         const newSemester = new this.semesterModel(semester)
         await newSemester.save()
-        this.historyService.insertChange(
-            `Se ha añadido el semestre ${semester.year} ${semester.semester}`,
-            Collections.SEMESTER,
-            userId,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se ha añadido el semestre ${semester.year} ${semester.semester}`,
+            collection_name: Collections.SEMESTER,
+            who: userId,
+            type_change: 'add',
+        })
         return newSemester
     }
 
@@ -287,12 +287,12 @@ export class SemestersService {
                 { new: true },
             )
             .exec()
-        this.historyService.insertChange(
-            `Se ha inicializado el semestre`,
-            Collections.SEMESTER,
-            idUser,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se ha inicializado el semestre`,
+            collection_name: Collections.SEMESTER,
+            who: idUser,
+            type_change: 'add',
+        })
         return modulesAdded
     }
 
@@ -313,12 +313,12 @@ export class SemestersService {
                 { new: true },
             )
             .exec()
-        this.historyService.insertChange(
-            `Se ha actualizado el semestre ${semesterExists.year} ${semesterExists.semester} a ${updatedSemester.year} ${updatedSemester.semester}`,
-            Collections.SEMESTER,
-            userId,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se ha actualizado el semestre ${semesterExists.year} ${semesterExists.semester} a ${updatedSemester.year} ${updatedSemester.semester}`,
+            collection_name: Collections.SEMESTER,
+            who: userId,
+            type_change: 'update',
+        })
         return updatedSemester
     }
 
@@ -450,12 +450,12 @@ export class SemestersService {
         // Schedule close
         this.natsClient.emit('close_semester', '')
         // History
-        this.historyService.insertChange(
-            'Se programa para tres días despues el cierre de semestre',
-            Collections.SEMESTER,
-            idUser,
-            'close',
-        )
+        this.historyService.insertChange({
+            change: 'Se programa para tres días despues el cierre de semestre',
+            collection_name: Collections.SEMESTER,
+            who: idUser,
+            type_change: 'close',
+        })
         // Emit notifications
         this.natsClient.emit(NotifyGlobalChannel, {
             Title: 'El cierre de semestre se aproxima',
@@ -475,11 +475,11 @@ export class SemestersService {
         await this.updateStatusCurrentSemester('working')
         this.natsClient.emit('interrupt_finish_semester', '')
 
-        this.historyService.insertChange(
-            'Se ha interrumpido el proceso de finalización de semestre',
-            Collections.SEMESTER,
-            idUser,
-            'close',
-        )
+        this.historyService.insertChange({
+            change: 'Se ha interrumpido el proceso de finalización de semestre',
+            collection_name: Collections.SEMESTER,
+            who: idUser,
+            type_change: 'close',
+        })
     }
 }

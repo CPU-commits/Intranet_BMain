@@ -36,12 +36,12 @@ export class LibraryService {
             ...librarian,
             user_type: Role.LIBRARIAN,
         })
-        this.historyService.insertChange(
-            `Se añade bibliotecario con RUT ${librarian.rut}`,
-            Collections.USER,
-            idUser,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se añade bibliotecario con RUT ${librarian.rut}`,
+            collection_name: Collections.USER,
+            who: idUser,
+            type_change: 'add',
+        })
         return newLibrarian
     }
 
@@ -60,12 +60,12 @@ export class LibraryService {
             librarian,
             idLibrarian,
         )
-        this.historyService.insertChange(
-            `Se actualiza el bibliotecario con RUT ${librarian.rut}`,
-            Collections.USER,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se actualiza el bibliotecario con RUT ${librarian.rut}`,
+            collection_name: Collections.USER,
+            who: idUser,
+            type_change: 'update',
+        })
         return updatedLibrarian
     }
 
@@ -82,21 +82,23 @@ export class LibraryService {
             status,
         )
         if (!status) {
-            this.historyService.insertChange(
-                `Se da de baja al bibliotecario con RUT ${user.rut}`,
-                Collections.USER,
-                idUser,
-                'dismiss',
+            this.historyService.insertChange({
+                change: `Se da de baja al bibliotecario con RUT ${user.rut}`,
+                collection_name: Collections.USER,
+                who: idUser,
+                type_change: 'dismiss',
                 why,
-            )
+                affected: user._id,
+            })
         } else {
-            this.historyService.insertChange(
-                `Se reintegra al bibliotecario con RUT ${user.rut}`,
-                Collections.USER,
-                idUser,
-                'reintegrate',
+            this.historyService.insertChange({
+                change: `Se reintegra al bibliotecario con RUT ${user.rut}`,
+                collection_name: Collections.USER,
+                who: idUser,
+                type_change: 'reintegrate',
                 why,
-            )
+                affected: user._id,
+            })
         }
         return dismiss
     }

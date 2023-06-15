@@ -145,12 +145,12 @@ export class CourseService {
                 'Este nivel/grado ya está asignado a otro curso',
             )
         const newCourse = new this.courseModel(course)
-        this.historyService.insertChange(
-            `Se añade el curso ${course.course}`,
-            Collections.COURSE,
-            idUser,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se añade el curso ${course.course}`,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'add',
+        })
         await newCourse.save()
         return await this.getCourseByID(newCourse._id.toString())
     }
@@ -190,12 +190,12 @@ export class CourseService {
                 { new: true },
             )
             .exec()
-        this.historyService.insertChange(
-            `Se actualiza el curso ${course.course}`,
-            Collections.COURSE,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se actualiza el curso ${course.course}`,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'update',
+        })
         return await this.getCourseByID(idCourse)
     }
 
@@ -208,12 +208,12 @@ export class CourseService {
         const deletedCourse = await this.courseModel
             .findByIdAndRemove(idCourse)
             .exec()
-        this.historyService.insertChange(
-            `Se ha eliminado el curso ${course.course}`,
-            Collections.COURSE,
-            idUser,
-            'delete',
-        )
+        this.historyService.insertChange({
+            change: `Se ha eliminado el curso ${course.course}`,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'delete',
+        })
         return deletedCourse
     }
     // Sections
@@ -359,12 +359,12 @@ export class CourseService {
                 { new: true },
             )
             .exec()
-        this.historyService.insertChange(
-            `Se ha agregado la sección ${section} al curso ${course.course}`,
-            Collections.COURSE,
-            idUser,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se ha agregado la sección ${section} al curso ${course.course}`,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'add',
+        })
         // Get image
         const imageUrl = await lastValueFrom(
             this.natsClient.send('get_aws_token_access', [message.key]),
@@ -408,12 +408,12 @@ export class CourseService {
                 { new: true },
             )
             .exec()
-        this.historyService.insertChange(
-            `Se ha asignado el profesor ${teacher.name} ${teacher.first_lastname} a la sección ${section.section}`,
-            Collections.COURSE,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se ha asignado el profesor ${teacher.name} ${teacher.first_lastname} a la sección ${section.section}`,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'update',
+        })
         return teacherAdded
     }
 
@@ -446,12 +446,12 @@ export class CourseService {
             .exec()
         const teacher = section.header_teacher as Teacher
         const user = teacher.user as User
-        this.historyService.insertChange(
-            `Se ha desasignado el profesor ${user.name} ${user.first_lastname} de la sección ${section.section}`,
-            Collections.COURSE,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se ha desasignado el profesor ${user.name} ${user.first_lastname} de la sección ${section.section}`,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'update',
+        })
         return true
     }
 
@@ -490,12 +490,12 @@ export class CourseService {
         const image = await lastValueFrom(
             this.natsClient.send('get_aws_token_access', [message.key]),
         )
-        this.historyService.insertChange(
-            `Se ha cambiado la imágen de la sección ${section.section}`,
-            Collections.COURSE,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se ha cambiado la imágen de la sección ${section.section}`,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'update',
+        })
         return image[0]
     }
 
@@ -587,12 +587,12 @@ export class CourseService {
                 ${course.course} -
                 ${section.section} a tipo variable`
         }
-        this.historyService.insertChange(
-            message,
-            Collections.COURSE,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: message,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'update',
+        })
     }
 
     async deleteSection(idSection: string, idUser: string) {
@@ -621,12 +621,12 @@ export class CourseService {
                 },
             })
             .exec()
-        this.historyService.insertChange(
-            `Se ha eliminado la sección ${section.section}`,
-            Collections.COURSE,
-            idUser,
-            'delete',
-        )
+        this.historyService.insertChange({
+            change: `Se ha eliminado la sección ${section.section}`,
+            collection_name: Collections.COURSE,
+            who: idUser,
+            type_change: 'delete',
+        })
         return deletedSection
     }
     // Cycle
@@ -634,12 +634,12 @@ export class CourseService {
         const newCycle = new this.cycleModel({
             cycle,
         })
-        this.historyService.insertChange(
-            `Se añade el ciclo ${cycle}`,
-            Collections.CYCLE,
-            idUser,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se añade el ciclo ${cycle}`,
+            collection_name: Collections.CYCLE,
+            who: idUser,
+            type_change: 'add',
+        })
         return await newCycle.save()
     }
 
@@ -657,12 +657,12 @@ export class CourseService {
             throw new ConflictException(
                 'Este ciclo está siendo usado por algún curso',
             )
-        this.historyService.insertChange(
-            `Se elimina el ciclo ${cycle.cycle}`,
-            Collections.CYCLE,
-            idUser,
-            'delete',
-        )
+        this.historyService.insertChange({
+            change: `Se elimina el ciclo ${cycle.cycle}`,
+            collection_name: Collections.CYCLE,
+            who: idUser,
+            type_change: 'delete',
+        })
         return await this.cycleModel.findByIdAndRemove(cycleId).exec()
     }
 }

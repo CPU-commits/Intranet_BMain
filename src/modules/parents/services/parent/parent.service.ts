@@ -80,14 +80,14 @@ export class ParentService {
                 user: new ObjectId(parent._id.toString()),
             })),
         )
-        this.historyService.insertChange(
-            `Se añaden apoderados con RUTs: ${parents
+        this.historyService.insertChange({
+            change: `Se añaden apoderados con RUTs: ${parents
                 .map((directive) => directive.rut)
                 .join(', ')}`,
-            Collections.USER,
-            user_id,
-            'add',
-        )
+            collection_name: Collections.USER,
+            who: user_id,
+            type_change: 'add',
+        })
         if (parents.length === 1) return newParents[0]
         return newParents
     }
@@ -101,12 +101,12 @@ export class ParentService {
             parent,
             idParent,
         )
-        this.historyService.insertChange(
-            `Se actualiza pariente con RUT ${parent.rut}`,
-            Collections.USER,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se actualiza pariente con RUT ${parent.rut}`,
+            collection_name: Collections.USER,
+            who: idUser,
+            type_change: 'update',
+        })
         return updatedParent
     }
 
@@ -140,12 +140,12 @@ export class ParentService {
             )
             .exec()
         // History
-        this.historyService.insertChange(
-            `Se ha asignado el alumno con RUT ${student.rut} al apoderado con RUT ${parent.user.rut}`,
-            Collections.USER,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se ha asignado el alumno con RUT ${student.rut} al apoderado con RUT ${parent.user.rut}`,
+            collection_name: Collections.USER,
+            who: idUser,
+            type_change: 'update',
+        })
         return {
             rut: student.rut,
             name: student.name,
@@ -162,21 +162,23 @@ export class ParentService {
             status,
         )
         if (!status) {
-            this.historyService.insertChange(
-                `Se da de baja al apoderado con RUT ${parent.rut}`,
-                Collections.USER,
-                idUser,
-                'dismiss',
+            this.historyService.insertChange({
+                change: `Se da de baja al apoderado con RUT ${parent.rut}`,
+                collection_name: Collections.USER,
+                who: idUser,
+                type_change: 'dismiss',
                 why,
-            )
+                affected: parent._id,
+            })
         } else {
-            this.historyService.insertChange(
-                `Se reintegra al apoderado con RUT ${parent.rut}`,
-                Collections.USER,
-                idUser,
-                'reintegrate',
+            this.historyService.insertChange({
+                change: `Se reintegra al apoderado con RUT ${parent.rut}`,
+                collection_name: Collections.USER,
+                who: idUser,
+                type_change: 'reintegrate',
                 why,
-            )
+                affected: parent._id,
+            })
         }
         return dismiss
     }

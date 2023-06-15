@@ -1,15 +1,25 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import { CollegeDTO } from '../dtos/college.dto'
+import { AddressDTO, CollegeDTO } from '../dtos/college.dto'
 import { KeyValue } from '../entities/key_value.entity'
 import { CollegeKeys } from '../models/college.model'
+import { Address } from '../entities/address.entity'
 
 @Injectable()
 export class CollegeService {
     constructor(
         @InjectModel(KeyValue.name) private keyValueModel: Model<KeyValue>,
+        @InjectModel(Address.name) private addressModel: Model<Address>,
     ) {}
+
+    async insertAddress(addressData: AddressDTO) {
+        const address = new this.addressModel({
+            ...addressData,
+            date: new Date(),
+        })
+        return await address.save()
+    }
 
     async getCollegeData() {
         const college: any = {}
@@ -31,6 +41,19 @@ export class CollegeService {
                 key: CollegeKeys.DIRECTION,
             })
             .exec()
+        // Save address
+        await this.addressModel
+            .deleteMany({
+                is_school: true,
+            })
+            .exec()
+
+        const address = new this.addressModel({
+            ...college.address,
+            date: new Date(),
+            is_school: true,
+        })
+        await address.save()
         if (direction) {
             return await Promise.all([
                 this.keyValueModel

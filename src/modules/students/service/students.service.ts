@@ -25,6 +25,7 @@ import { ClientProxy } from '@nestjs/microservices'
 import * as moment from 'moment'
 import { Vote } from '../entities/vote.entity'
 import { NotifyGlobal, NotifyGlobalChannel } from 'src/models/notify.model'
+import { CollegeService } from 'src/modules/college/service/college.service'
 
 @Injectable()
 export class StudentsService {
@@ -39,6 +40,7 @@ export class StudentsService {
         private usersService: UsersService,
         private historyService: HistoryService,
         private readonly semestersService: SemestersService,
+        private readonly collegeService: CollegeService,
     ) {}
 
     async getDataByIDUser(studentId: string) {
@@ -67,6 +69,7 @@ export class StudentsService {
                     select: 'course',
                 },
             })
+            .populate('address', { is_school: 0 })
             .exec()
     }
 
@@ -115,6 +118,11 @@ export class StudentsService {
                             user_type: user.user_type,
                             status: user.status,
                             course: student.course,
+                            birthday: moment(student.birthday).format(
+                                'YYYY-MM-DD',
+                            ),
+                            gender: student.gender,
+                            address: student.address,
                         }
                     }),
                 )
@@ -220,18 +228,25 @@ export class StudentsService {
             ...rest,
             user_type: Role.STUDENT,
         })
+        // Insert address and student
+        const address = await this.collegeService.insertAddress(student.address)
+
         const newStudent = new this.studentModel({
             user: newUser._id.toString(),
             registration_number,
             course: student.course,
+            gender: student.gender,
+            birthday: new Date(student.birthday),
+            address: address._id,
         })
         await newStudent.save()
-        this.historyService.insertChange(
-            `Se añade alumno con RUT ${student.rut}`,
-            Collections.USER,
-            user_id,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se añade alumno con RUT ${student.rut}`,
+            collection_name: Collections.USER,
+            who: user_id,
+            type_change: 'add',
+            affected: newStudent._id,
+        })
         return newUser
     }
 
@@ -254,14 +269,14 @@ export class StudentsService {
             }
         })
         await this.studentModel.insertMany(response)
-        this.historyService.insertChange(
-            `Se añaden alumnos con RUTs: ${students
+        this.historyService.insertChange({
+            change: `Se añaden alumnos con RUTs: ${students
                 .map((student) => student.rut)
                 .join(', ')}`,
-            Collections.USER,
-            user_id,
-            'add',
-        )
+            collection_name: Collections.USER,
+            who: user_id,
+            type_change: 'add',
+        })
         return newStudents
     }
 
@@ -285,12 +300,12 @@ export class StudentsService {
                 { new: true },
             )
             .exec()
-        this.historyService.insertChange(
-            `Se actualiza alumno con RUT ${student.rut}`,
-            Collections.USER,
-            user_id,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se actualiza alumno con RUT ${student.rut}`,
+            collection_name: Collections.USER,
+            who: user_id,
+            type_change: 'update',
+        })
         return updatedStudent
     }
 
@@ -343,12 +358,12 @@ export class StudentsService {
                 finish_date: voting.finish_date,
                 period: voting.period,
             })
-            this.historyService.insertChange(
-                `Se inician las votaciones del semestre ${semester.semester}° - ${semester.year}`,
-                VotingClass.name,
-                idUser,
-                'add',
-            )
+            this.historyService.insertChange({
+                change: `Se inician las votaciones del semestre ${semester.semester}° - ${semester.year}`,
+                collection_name: VotingClass.name,
+                who: idUser,
+                type_change: 'add',
+            })
             return votingData
         }
         throw new ConflictException(
@@ -441,12 +456,12 @@ export class StudentsService {
                 : currentVoting.finish_date,
             period: voting?.period ? voting.period : currentVoting.period,
         })
-        this.historyService.insertChange(
-            `Se actualizan los datos de votación del semestre ${semester.semester}° - ${semester.year}`,
-            Collections.VOTING,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se actualizan los datos de votación del semestre ${semester.semester}° - ${semester.year}`,
+            collection_name: Collections.VOTING,
+            who: idUser,
+            type_change: 'update',
+        })
         return updatedVoting
     }
 
@@ -459,21 +474,23 @@ export class StudentsService {
             status,
         )
         if (!status) {
-            this.historyService.insertChange(
-                `Se va de la institución el alumno con RUT ${student.rut}`,
-                Collections.USER,
-                user_id,
-                'dismiss',
+            this.historyService.insertChange({
+                change: `Se va de la institución el alumno con RUT ${student.rut}`,
+                collection_name: Collections.USER,
+                who: user_id,
+                type_change: 'dismiss',
                 why,
-            )
+                affected: student._id,
+            })
         } else {
-            this.historyService.insertChange(
-                `Se reintegra a la institución el alumno con RUT ${student.rut}`,
-                Collections.USER,
-                user_id,
-                'reintegrate',
+            this.historyService.insertChange({
+                change: `Se reintegra a la institución el alumno con RUT ${student.rut}`,
+                collection_name: Collections.USER,
+                who: user_id,
+                type_change: 'reintegrate',
                 why,
-            )
+                affected: student._id,
+            })
         }
         return dismiss
     }

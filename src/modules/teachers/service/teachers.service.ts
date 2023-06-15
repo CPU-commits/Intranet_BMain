@@ -132,12 +132,12 @@ export class TeachersService {
             imparted: [],
         })
         await newTeacher.save()
-        this.historyService.insertChange(
-            `Se añade profesor con RUT ${teacher.rut}`,
-            Collections.USER,
-            user_id,
-            'add',
-        )
+        this.historyService.insertChange({
+            change: `Se añade profesor con RUT ${teacher.rut}`,
+            collection_name: Collections.USER,
+            who: user_id,
+            type_change: 'add',
+        })
         return await this.getTeacherByID(newTeacher._id.toString())
     }
 
@@ -156,14 +156,14 @@ export class TeachersService {
             }
         })
         await this.teacherModel.insertMany(response)
-        this.historyService.insertChange(
-            `Se añaden profesores con RUTs: ${newTeachers
+        this.historyService.insertChange({
+            change: `Se añaden profesores con RUTs: ${newTeachers
                 .map((teacher) => teacher.rut)
                 .join(', ')}`,
-            Collections.USER,
-            user_id,
-            'add',
-        )
+            collection_name: Collections.USER,
+            who: user_id,
+            type_change: 'add',
+        })
         return newTeachers
     }
 
@@ -176,12 +176,12 @@ export class TeachersService {
             teacher,
             teacher_id,
         )
-        this.historyService.insertChange(
-            `Se actualiza profesor con RUT ${teacher.rut}`,
-            Collections.USER,
-            idUser,
-            'update',
-        )
+        this.historyService.insertChange({
+            change: `Se actualiza profesor con RUT ${teacher.rut}`,
+            collection_name: Collections.USER,
+            who: idUser,
+            type_change: 'update',
+        })
         return updatedteacher
     }
 
@@ -239,15 +239,15 @@ export class TeachersService {
 
         const section = teacherUpdated.imparted[index].course as CourseLetter
         const subject = teacherUpdated.imparted[index].subject as Subject
-        this.historyService.insertChange(
-            `Se añade la materia y curso (${
+        this.historyService.insertChange({
+            change: `Se añade la materia y curso (${
                 (section.course as Course).course
             } ${section.section} - ${subject.subject}) al
             profesor con RUT ${teacherUser.rut}`,
-            Collections.USER,
-            idUser,
-            'update',
-        )
+            collection_name: Collections.USER,
+            who: idUser,
+            type_change: 'update',
+        })
         return teacherUpdated
     }
 
@@ -271,14 +271,14 @@ export class TeachersService {
                 new: true,
             },
         )
-        this.historyService.insertChange(
-            `Se elimina una materia y curso al profesor con RUT ${
+        this.historyService.insertChange({
+            change: `Se elimina una materia y curso al profesor con RUT ${
                 (teacher.user as User).rut
             }`,
-            Collections.USER,
-            idUser,
-            'update',
-        )
+            collection_name: Collections.USER,
+            who: idUser,
+            type_change: 'update',
+        })
         return teacherUpdated
     }
 
@@ -291,21 +291,23 @@ export class TeachersService {
             status,
         )
         if (!status) {
-            this.historyService.insertChange(
-                `Se da de baja al profesor con RUT ${teacher.rut}`,
-                Collections.USER,
-                user_id,
-                'dismiss',
+            this.historyService.insertChange({
+                change: `Se da de baja al profesor con RUT ${teacher.rut}`,
+                collection_name: Collections.USER,
+                who: user_id,
+                type_change: 'dismiss',
                 why,
-            )
+                affected: teacher._id,
+            })
         } else {
-            this.historyService.insertChange(
-                `Se reintegra el profesor con RUT ${teacher.rut}`,
-                Collections.USER,
-                user_id,
-                'reintegrate',
+            this.historyService.insertChange({
+                change: `Se reintegra el profesor con RUT ${teacher.rut}`,
+                collection_name: Collections.USER,
+                who: user_id,
+                type_change: 'reintegrate',
                 why,
-            )
+                affected: teacher._id,
+            })
         }
         return dismiss
     }

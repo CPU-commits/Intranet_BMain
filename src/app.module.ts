@@ -32,7 +32,7 @@ import { MulterModule } from '@nestjs/platform-express'
 import { MAX_FILES, MAX_FILE_SIZE } from './common/max_size_file'
 import { FilesModule } from './modules/files/files.module'
 import { ReportsModule } from './modules/reports/reports.module'
-import { ParentsModule } from './modules/parents/parents.module';
+import { ParentsModule } from './modules/parents/parents.module'
 
 @Module({
     imports: [
