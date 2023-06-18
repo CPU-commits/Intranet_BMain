@@ -100,6 +100,7 @@ export class StudentsController {
         @Query('search') search?: string,
         @Query('total') getTotal?: boolean,
         @Query('actived') actived?: boolean,
+        @Query('filter') filter?: string,
     ) {
         try {
             const students = await this.studentsService.getStudents(
@@ -108,6 +109,7 @@ export class StudentsController {
                 limit,
                 getTotal,
                 actived,
+                filter,
             )
             handleRes(res, students)
         } catch (err) {

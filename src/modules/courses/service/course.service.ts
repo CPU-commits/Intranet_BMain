@@ -26,6 +26,9 @@ import { ClientProxy } from '@nestjs/microservices'
 import { lastValueFrom } from 'rxjs'
 import { File } from 'src/modules/aws/entities/file.entity'
 import { OID } from 'src/common/oid.model'
+import { PayloadToken } from 'src/auth/models/token.model'
+import { Role } from 'src/auth/models/roles.model'
+import { ObjectId } from 'mongodb'
 
 @Injectable()
 export class CourseService {
@@ -42,8 +45,14 @@ export class CourseService {
         private awsService: AwsService,
     ) {}
 
-    async getCourseCustom(query = null, filter = null) {
-        return await this.courseModel.findOne(query, filter).exec()
+    async getCourseCustom(
+        queryAdd?: FilterQuery<Course>,
+        projection: ProjectionType<Course> = null,
+    ) {
+        const query = {
+            $and: [{ status: true }, queryAdd],
+        }
+        return await this.courseModel.findOne(query, projection).exec()
     }
 
     async getCoursesCustom(
@@ -65,13 +74,6 @@ export class CourseService {
             })
         if (count) courses.count()
         return await courses.exec()
-    }
-
-    async getSectionCustom(queryAdd?: any, filter = null) {
-        const query = {
-            $and: [{ status: true }, queryAdd],
-        }
-        return await this.courseModel.findOne(query, filter).exec()
     }
 
     async getSubjectSection(subjectId: string, sectionId: string) {
@@ -136,6 +138,55 @@ export class CourseService {
 
     private async getCourseByLevel(level: number) {
         return await this.courseModel.findOne({ level }).exec()
+    }
+
+    async hasAccessToSection(user: PayloadToken, idSection: string) {
+        const query =
+            user.user_type === Role.TEACHER
+                ? {
+                      _id: new ObjectId(idSection),
+                      header_teacher: user._id,
+                      status: true,
+                  }
+                : {
+                      _id: new ObjectId(idSection),
+                      status: true,
+                  }
+
+        return await this.sectionModel.exists(query).exec()
+    }
+
+    async getUserSectionsAccess(
+        user: PayloadToken,
+        {
+            total,
+            skip,
+            limit,
+        }: { total?: boolean; skip?: number; limit?: number },
+    ) {
+        const query =
+            user.user_type === Role.TEACHER
+                ? {
+                      header_teacher: user._id,
+                      status: true,
+                  }
+                : {
+                      status: true,
+                  }
+
+        const sections = this.sectionModel
+            .find(query)
+            .populate('course', { course: 1 })
+        // Limit
+        if (limit) sections.limit(limit)
+        else sections.limit(20)
+        // Skip
+        if (skip) sections.skip(skip)
+        // Total
+        let totalData = 0
+        if (total) totalData = await this.sectionModel.count(query)
+
+        return { sections: await sections.exec(), total: totalData }
     }
 
     async newCourse(course: CourseDTO, idUser: string) {
@@ -217,13 +268,14 @@ export class CourseService {
         return deletedCourse
     }
     // Sections
-    private async getSectionById(sectionId: string) {
-        return await this.sectionModel
-            .findOne({
-                _id: sectionId,
-                status: true,
-            })
-            .exec()
+    async getSectionById(sectionId: string, populate = false) {
+        const sections = this.sectionModel.findOne({
+            _id: sectionId,
+            status: true,
+        })
+        if (populate) sections.populate('course', { course: 1 })
+
+        return await sections.exec()
     }
 
     async allSectionsHaveNextSection() {

@@ -6,7 +6,7 @@ import {
     NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { FilterQuery, Model } from 'mongoose'
 import * as bcrypt from 'bcrypt'
 
 import { UpdateUserDTO, UserDTO } from '../../dtos/user.dto'
@@ -97,7 +97,7 @@ export class UsersService {
     }
 
     async getUsers(
-        filter?: any,
+        filter?: FilterQuery<User>,
         select = null,
         sort?: any,
         search?: string,

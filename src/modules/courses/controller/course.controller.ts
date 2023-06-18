@@ -233,6 +233,25 @@ export class CourseController {
         }
     }
     // Sections
+    @Get('/section/:idSection')
+    async getSection(
+        @Res() res: Response,
+        @Param('idSection', MongoIdPipe) idSection: string,
+    ) {
+        try {
+            const section = await this.courseService.getSectionById(
+                idSection,
+                true,
+            )
+
+            handleRes(res, {
+                section,
+            })
+        } catch (err) {
+            handleError(err, res)
+        }
+    }
+
     @ApiExtraModels(CourseSectionsRes)
     @ApiOperation({
         summary: 'Get course sections',

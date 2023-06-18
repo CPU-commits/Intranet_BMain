@@ -61,7 +61,7 @@ export class SubjectsService {
             _id: idSubject,
         })
         if (!subject) throw new NotFoundException('No existe esta materia')
-        const isUsed = await this.courseService.getSectionCustom({
+        const isUsed = await this.courseService.getCourseCustom({
             subjects: {
                 $in: [idSubject],
             },

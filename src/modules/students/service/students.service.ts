@@ -79,6 +79,7 @@ export class StudentsService {
         limit?: number,
         total = false,
         actived = false,
+        filter?: string,
     ) {
         const status = actived ? 1 : { $exists: true }
         return await this.usersService
@@ -89,6 +90,13 @@ export class StudentsService {
                         { user_type: Role.STUDENT_DIRECTIVE },
                     ],
                     status,
+                    _id: filter
+                        ? {
+                              $nin: filter
+                                  .split(',')
+                                  .map((id) => new ObjectId(id)),
+                          }
+                        : undefined,
                 },
                 {
                     password: 0,
